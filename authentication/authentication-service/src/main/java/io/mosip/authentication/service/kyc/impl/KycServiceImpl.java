@@ -435,7 +435,10 @@ public class KycServiceImpl implements KycService {
 		Map<String, Object> respMap = new HashMap<>();
 		Set<String> uniqueConsentedLocales = new HashSet<String>(consentedLocales);
 		Map<String, String> mappedConsentedLocales = localesMapping(uniqueConsentedLocales);
-
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "buildKycExchangeResponse",
+				"uniqueConsentedLocales " + uniqueConsentedLocales);
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "buildKycExchangeResponse",
+				"mappedConsentedLocales " + mappedConsentedLocales);
 		respMap.put(IdAuthCommonConstants.SUBJECT, subject);
 		
 		for (String attrib : consentedAttributes) {
@@ -485,6 +488,8 @@ public class KycServiceImpl implements KycService {
 				return;
 			}
 			Map<String, String> mappedLangCodes = langCodeMapping(idInfoList);
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "buildKycExchangeResponse",
+					"mappedLangCodes " + mappedLangCodes);
 			List<String> availableLangCodes = getAvailableLangCodes(mappedConsentedLocales, mappedLangCodes);
 			if (availableLangCodes.size() == 1){
 				for (IdentityInfoDTO identityInfo : idInfoList) {
@@ -645,6 +650,8 @@ public class KycServiceImpl implements KycService {
 						nameBuffer.append(" ");
 					}
 					Map<String, String> mappedLangCodes = langCodeMapping(idInfoList);
+					mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "buildKycExchangeResponse",
+							"nameList " + mappedLangCodes);
 					if (!mappedLangCodes.keySet().contains(consentedLocaleValue)) {
 						break;
 					}
