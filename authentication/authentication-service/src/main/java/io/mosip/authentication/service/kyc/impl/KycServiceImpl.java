@@ -578,8 +578,8 @@ public class KycServiceImpl implements KycService {
 				}
 			}
 		}
-		//if (identityInfoValue.toString().trim().length() == 0)
-		//	return;
+		if (identityInfoValue.toString().trim().length() == 0)
+			return;
 		//String identityInfoValueStr = identityInfoValue.toString();
 		//String trimmedValue = identityInfoValueStr.substring(0, identityInfoValueStr.lastIndexOf(addressValueSeparator));
 		addressMap.put(IdAuthCommonConstants.ADDRESS_FORMATTED + localeAppendValue, identityInfoValue.toString());
@@ -623,8 +623,8 @@ public class KycServiceImpl implements KycService {
 			if (identityInfoValue.toString().trim().length() > 0)
 				addressMap.put(addressAttribute + localeAppendValue, identityInfoValue.toString());
 		}
-		//if (addressMap.size() == 0)
-		//	return;
+		if (addressMap.size() == 0)
+			return;
 
 		if (langCodeFound && addLocale)
 			respMap.put(consentedAddressAttributeName + localeAppendValue, addressMap);
