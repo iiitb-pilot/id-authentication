@@ -156,10 +156,11 @@ public class IdentityKeyBindingServiceImpl implements IdentityKeyBindingService 
         // Need to re-check this again
         List<String> idNames = idMappingConfig.getName();
         StringBuilder strBuilder = new StringBuilder();
-        logger.info("identityInfo : {}, Idnames : {}", identityInfo, idNames);
         for (String idName: idNames) {
             List<IdentityInfoDTO> idInfoList = identityInfo.get(idName);
-            logger.info("Filtered for : {} >>>>>> {}", idName, idInfoList);
+            if(idInfoList==null){
+                continue;
+            }
             for (IdentityInfoDTO identityInfoData : idInfoList) {
                 if (identityInfoData.getLanguage().equalsIgnoreCase(defaultLangCode)) {
                     if (strBuilder.length() > 0) 
