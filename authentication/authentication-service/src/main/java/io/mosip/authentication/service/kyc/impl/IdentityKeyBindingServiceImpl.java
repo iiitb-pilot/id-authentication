@@ -158,6 +158,9 @@ public class IdentityKeyBindingServiceImpl implements IdentityKeyBindingService 
         StringBuilder strBuilder = new StringBuilder();
         for (String idName: idNames) {
             List<IdentityInfoDTO> idInfoList = identityInfo.get(idName);
+            if(idInfoList==null){
+                continue;
+            }
             for (IdentityInfoDTO identityInfoData : idInfoList) {
                 if (identityInfoData.getLanguage().equalsIgnoreCase(defaultLangCode)) {
                     if (strBuilder.length() > 0) 
