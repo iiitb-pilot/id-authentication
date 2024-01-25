@@ -10,13 +10,13 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.Map.Entry;
-import java.util.AbstractMap.SimpleEntry;
 
 import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
@@ -27,7 +27,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import io.mosip.kernel.cryptomanager.dto.JWTEncryptRequestDto;
 import io.mosip.authentication.common.service.repository.IdaUinHashSaltRepo;
+import io.mosip.authentication.common.service.repository.IdentityCacheRepository;
 import io.mosip.authentication.common.service.util.EnvUtil;
 import io.mosip.authentication.common.service.util.TokenEncoderUtil;
 import io.mosip.authentication.core.constant.IdAuthCommonConstants;
@@ -37,6 +39,7 @@ import io.mosip.authentication.core.exception.IdAuthUncheckedException;
 import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
 import io.mosip.authentication.core.logger.IdaLogger;
 import io.mosip.authentication.core.util.CryptoUtil;
+import io.mosip.authentication.core.util.IdTypeUtil;
 import io.mosip.idrepository.core.util.SaltUtil;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.keymanager.model.CertificateParameters;
@@ -47,6 +50,7 @@ import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.HMACUtils2;
 import io.mosip.kernel.crypto.jce.core.CryptoCore;
 import io.mosip.kernel.cryptomanager.dto.CryptomanagerRequestDto;
+import io.mosip.kernel.cryptomanager.dto.JWTCipherResponseDto;
 import io.mosip.kernel.cryptomanager.service.CryptomanagerService;
 import io.mosip.kernel.cryptomanager.util.CryptomanagerUtils;
 import io.mosip.kernel.keygenerator.bouncycastle.KeyGenerator;
@@ -58,6 +62,7 @@ import io.mosip.kernel.keymanagerservice.repository.DataEncryptKeystoreRepositor
 import io.mosip.kernel.keymanagerservice.service.KeymanagerService;
 import io.mosip.kernel.keymanagerservice.util.KeymanagerUtil;
 import io.mosip.kernel.signature.constant.SignatureConstant;
+import io.mosip.kernel.signature.dto.JWSSignatureRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureVerifyRequestDto;
 import io.mosip.kernel.signature.dto.JWTSignatureVerifyResponseDto;
@@ -143,6 +148,10 @@ public class IdAuthSecurityManager {
 	@Value("${mosip.kernel.certificate.sign.algorithm:SHA256withRSA}")
     private String signAlgorithm;
 
+	/** The sign applicationid. */
+	@Value("${mosip.ida.vci.exchange.sign.applicationid:IDA_VCI_EXCHANGE}")
+	private String vciExchSignApplicationId;
+
 	/** The uin hash salt repo. */
 	@Autowired
 	private IdaUinHashSaltRepo uinHashSaltRepo;
@@ -175,6 +184,15 @@ public class IdAuthSecurityManager {
 
 	@Autowired
     private KeymanagerUtil keymanagerUtil;
+	
+	@Value("${mosip.ida.idhash.legacy-salt-selection-enabled:false}")
+	private boolean legacySaltSelectionEnabled;
+	
+	@Autowired
+	private IdentityCacheRepository identityRepo;
+	
+	@Autowired
+	private IdTypeUtil idTypeUtil;
 	
 	/**
 	 * Gets the user.
@@ -381,15 +399,62 @@ public class IdAuthSecurityManager {
 				: jwtResponse.isSignatureValid();
 	}
 
-	/**
-	 * Hash.
-	 *
-	 * @param id the id
-	 * @return the string
-	 * @throws IdAuthenticationBusinessException the id authentication business exception
-	 */
-	public String hash(String id) throws IdAuthenticationBusinessException {
+	private String newHash(String id) throws IdAuthenticationBusinessException {
 		Integer idModulo = getSaltKeyForHashOfId(id);
+		return doGetHashForIdAndSaltKey(id, idModulo);
+	}
+	
+	private String legacyHash(String id) throws IdAuthenticationBusinessException {
+		Integer idModulo = getSaltKeyForId(id);
+		return doGetHashForIdAndSaltKey(id, idModulo);
+	}
+	
+	public String hash(String id) throws IdAuthenticationBusinessException {
+		String hashWithNewMethod = null;
+		try {
+			hashWithNewMethod = newHash(id);
+		} catch (IdAuthenticationBusinessException e) {
+			//If salt key is not present in the DB, this error will occur.
+			if (e.getErrorCode().equals(IdAuthenticationErrorConstants.ID_NOT_AVAILABLE.getErrorCode())) {
+				//If legacy hash is not selected throw back the error.
+				if(!legacySaltSelectionEnabled) {
+					mosipLogger.error("Salt key is missing in the table");
+					throw e;
+				}
+				// Ignoring this error.
+				mosipLogger
+						.debug("Ignoring missing salt key in the table as legacy salt selection will be used further.");
+			} else {
+				throw e;
+			}
+		}
+		// If either salt key is not present in uin_hash_salt table
+		// or the new hash is not present in the identity_cache table
+		if(hashWithNewMethod == null || !identityRepo.existsById(hashWithNewMethod)) {
+			if(!legacySaltSelectionEnabled) {
+				//Throw error
+				throwIdNotAvailabeError(id);
+			}
+			
+			String hashWithLegacyMethod = legacyHash(id);
+			if(!identityRepo.existsById(hashWithLegacyMethod)) {
+				//Throw error
+				throwIdNotAvailabeError(id);
+			}
+			
+			return hashWithLegacyMethod;
+		}
+		return hashWithNewMethod;
+	}
+
+	private void throwIdNotAvailabeError(String id) throws IdAuthenticationBusinessException {
+		throw new IdAuthenticationBusinessException(
+				IdAuthenticationErrorConstants.ID_NOT_AVAILABLE.getErrorCode(),
+				String.format(IdAuthenticationErrorConstants.ID_NOT_AVAILABLE.getErrorMessage(),
+						idTypeUtil.getIdType(id)));
+	}
+
+	private String doGetHashForIdAndSaltKey(String id, Integer idModulo) throws IdAuthenticationBusinessException {
 		String hashSaltValue = uinHashSaltRepo.retrieveSaltById(idModulo);
 		if (hashSaltValue != null) {
 			try {
@@ -404,6 +469,11 @@ public class IdAuthSecurityManager {
 					String.format(IdAuthenticationErrorConstants.ID_NOT_AVAILABLE.getErrorMessage(),
 							SALT_FOR_THE_GIVEN_ID));
 		}
+	}
+
+	public int getSaltKeyForId(String id) {
+		Integer saltKeyLength = EnvUtil.getSaltKeyLength();
+		return SaltUtil.getIdvidModulo(id, saltKeyLength);
 	}
 
 	/**
@@ -593,6 +663,20 @@ public class IdAuthSecurityManager {
 	}
 
 	@WithRetry
+	public String jwsSignWithPayload(String data) {
+		JWSSignatureRequestDto request = new JWSSignatureRequestDto();
+		request.setApplicationId(vciExchSignApplicationId);
+		request.setDataToSign(CryptoUtil.encodeBase64Url(data.getBytes()));
+		request.setIncludeCertHash(false);
+		request.setIncludeCertificate(includeCertificate);
+		request.setIncludePayload(false);
+		request.setReferenceId(IdAuthCommonConstants.EMPTY);
+		request.setB64JWSHeaderParam(false);
+		request.setValidateJson(false);
+		return signatureService.jwsSign(request).getJwtSignedData();
+	}
+
+	@WithRetry
 	public Entry<String, String> generateKeyBindingCertificate(PublicKey publicKey, CertificateParameters certParams) 
 				throws CertificateEncodingException {
 		String timestamp = DateUtils.getUTCCurrentDateTimeString();
@@ -609,5 +693,16 @@ public class IdAuthSecurityManager {
 		String certificateData = keymanagerUtil.getPEMFormatedData(signedCert);
 
 		return new SimpleEntry<>(certThumbprint, certificateData);
+	}
+
+	@WithRetry
+	public String jwtEncrypt(String dataToEncrypt, String certificateData) {
+		JWTEncryptRequestDto encryptRequestDto = new JWTEncryptRequestDto();
+		encryptRequestDto.setData(CryptoUtil.encodeBase64Url(dataToEncrypt.getBytes()));
+		encryptRequestDto.setX509Certificate(certificateData);
+		encryptRequestDto.setEnableDefCompression(true);
+		encryptRequestDto.setIncludeCertHash(true);
+		JWTCipherResponseDto cipherResponseDto = cryptomanagerService.jwtEncrypt(encryptRequestDto);
+		return cipherResponseDto.getData();
 	}
 }
