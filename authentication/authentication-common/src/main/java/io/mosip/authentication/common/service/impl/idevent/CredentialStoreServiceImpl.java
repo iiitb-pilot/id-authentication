@@ -164,6 +164,8 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	public IdentityEntity processCredentialStoreEvent(CredentialEventStore credentialEventStore)
 			throws IdAuthenticationBusinessException, RetryingBeforeRetryIntervalException {
 		String statusCode = credentialEventStore.getStatusCode();
+		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
+				"processCredentialStoreEvent", "Credential store event status: " + statusCode);
 		if (statusCode.equals(CredentialStoreStatus.FAILED.name())) {
 			skipIfWaitingForRetryInterval(credentialEventStore);
 		}
@@ -175,12 +177,12 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 		} catch (RuntimeException e) {
 			// Any Runtime exception is marked as non-recoverable and hence retry is skipped for that
 			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
-					"processCredentialStoreEvent", "Error in Processing credential store event: " + e.getMessage());
+					"processCredentialStoreEvent", "Runtime Error in Processing credential store event: " + ExceptionUtils.getFullStackTrace(e));
 			updateEventProcessingStatus(credentialEventStore, false, false, statusCode);
 			throw e;
 		} catch (Exception e) {
 			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
-					"processCredentialStoreEvent", "Error in Processing credential store event: " + e.getMessage());
+					"processCredentialStoreEvent", "Error in Processing credential store event: " + ExceptionUtils.getFullStackTrace(e));
 			updateEventProcessingStatus(credentialEventStore, false, true, statusCode);
 			throw e;
 		}
@@ -218,6 +220,8 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	@Transactional
 	private void updateEventProcessingStatus(CredentialEventStore credentialEventStore, boolean isSuccess, boolean isRecoverableException,
 			String status) {
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(), "processCredentialStoreEvent",
+				"Updating credential store event: " + credentialEventStore.getStatusCode());
 		credentialEventStore.setUpdBy(IDA);
 		LocalDateTime updatedDTimes = DateUtils.getUTCCurrentDateTime();
 		credentialEventStore.setUpdDTimes(updatedDTimes);

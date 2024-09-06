@@ -28,7 +28,7 @@ public interface CredentialEventStoreRepository extends BaseRepository<Credentia
 	 * @return the page
 	 */
 	@Query(value = "SELECT * from credential_event_store where status_code in ('NEW', 'FAILED') " +
-			"order by status_code desc, retry_count asc, cr_dtimes asc FOR UPDATE SKIP LOCKED " // then, try processing old entries
+			"order by status_code desc, retry_count asc, cr_dtimes asc " // then, try processing old entries
 			, nativeQuery = true)
 	Page<CredentialEventStore> findNewOrFailedEvents(Pageable pageable);
 	
