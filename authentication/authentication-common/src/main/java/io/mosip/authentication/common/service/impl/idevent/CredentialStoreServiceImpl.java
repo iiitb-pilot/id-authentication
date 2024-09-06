@@ -163,16 +163,21 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	@Override
 	public IdentityEntity processCredentialStoreEvent(CredentialEventStore credentialEventStore)
 			throws IdAuthenticationBusinessException, RetryingBeforeRetryIntervalException {
+		long startTime = System.currentTimeMillis();
+		String requestId = credentialEventStore.getCredentialTransactionId();
 		String statusCode = credentialEventStore.getStatusCode();
-		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
-				"processCredentialStoreEvent", "Credential store event status: " + statusCode);
 		if (statusCode.equals(CredentialStoreStatus.FAILED.name())) {
 			skipIfWaitingForRetryInterval(credentialEventStore);
 		}
 		
 		try {
 			IdentityEntity entity = doProcessCredentialStoreEvent(credentialEventStore);
+			mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
+					"processCredentialStoreEvent", "Time taken to process credentialStoreEvent - " + statusCode + " - " + requestId + " - (" + (System.currentTimeMillis() - startTime) + "ms)");
+			long updateEventStartTime = System.currentTimeMillis();
 			updateEventProcessingStatus(credentialEventStore, true, false, statusCode);
+			mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
+					"processCredentialStoreEvent", "Time taken to update process status - " + requestId + " - (" + (System.currentTimeMillis() - updateEventStartTime) + "ms)");
 			return entity;
 		} catch (RuntimeException e) {
 			// Any Runtime exception is marked as non-recoverable and hence retry is skipped for that
@@ -232,6 +237,7 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 			credentialEventStore.setStatusCode(statusCode);
 			// Send websub event "STORED" status for the event id.
 			credentialStoreStatusEventPublisher.publishEvent(statusCode, requestId, updatedDTimes);
+			updateStatusAndRetryCount(credentialEventStore, Optional.of(CredentialStoreStatus.STORED.name()), OptionalInt.of(1));
 			audit(requestId, statusCode);
 		} else {
 			if (isRecoverableException) {
@@ -433,7 +439,10 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	 */
 	@Override
 	public void storeIdentityEntity(List<? extends IdentityEntity> idEntities) {
+		long startTime = System.currentTimeMillis();
 		identityCacheRepo.saveAll(idEntities);
+		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
+				"processCredentialStoreEvent", "Time taken to insert identity cache - " + idEntities.size() + " records - (" + (System.currentTimeMillis() - startTime) + "ms)");
 	}
 
 	/**
