@@ -237,7 +237,6 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 			credentialEventStore.setStatusCode(statusCode);
 			// Send websub event "STORED" status for the event id.
 			credentialStoreStatusEventPublisher.publishEvent(statusCode, requestId, updatedDTimes);
-			updateStatusAndRetryCount(credentialEventStore, Optional.of(CredentialStoreStatus.STORED.name()), OptionalInt.of(1));
 			audit(requestId, statusCode);
 		} else {
 			if (isRecoverableException) {
