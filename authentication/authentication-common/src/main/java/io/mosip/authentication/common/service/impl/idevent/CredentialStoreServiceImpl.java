@@ -353,11 +353,17 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 					saveSalt(modulo, salt);
 
 					if (demoKeyIndex != null && demoKey != null) {
+						long demoStartTime = System.currentTimeMillis();
 						securityManager.reEncryptAndStoreRandomKey(demoKeyIndex, demoKey);
+						mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
+								"processCredentialStoreEvent", "Time taken to decrypt demo data - " + " (" + (System.currentTimeMillis() - demoStartTime) + "ms)");
 					}
 
 					if (bioKeyIndex != null && bioKey != null) {
+						long bioStartTime = System.currentTimeMillis();
 						securityManager.reEncryptAndStoreRandomKey(bioKeyIndex, bioKey);
+						mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
+								"processCredentialStoreEvent", "Time taken to decrypt bio data - " + " (" + (System.currentTimeMillis() - bioStartTime) + "ms)");
 					}
 
 					String idHash = (String) additionalData.get(ID_HASH);
@@ -400,6 +406,7 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	@SuppressWarnings("unchecked")
 	private IdentityEntity createIdentityEntity(String idHash, String token, Integer transactionLimit,
 			String expiryTime, Map<String, Object> credentialData) throws IdAuthenticationBusinessException {
+		long startTime = System.currentTimeMillis();
 		Map<String, Object>[] demoBioData = splitDemoBioData(
 				(Map<String, Object>) credentialData.get(IdAuthCommonConstants.CREDENTIAL_SUBJECT));
 		try {
@@ -425,6 +432,8 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 
 			identityEntity.setDemographicData(demoBytes);
 			identityEntity.setBiometricData(bioBytes);
+			mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
+					"processCredentialStoreEvent", "Time taken to construct identity cache data - " + " (" + (System.currentTimeMillis() - startTime) + "ms)");
 			return identityEntity;
 		} catch (ClassCastException | JsonProcessingException e) {
 			throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS, e);
