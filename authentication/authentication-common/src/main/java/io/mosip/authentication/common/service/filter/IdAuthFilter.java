@@ -1188,7 +1188,7 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 	 */
 	@Override
 	protected boolean isSignatureVerificationRequired() {
-		return true;
+		return false;
 	}
 
 	/**
