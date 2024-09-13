@@ -52,7 +52,7 @@ public class IdTypeUtil {
 				return idValidator.validateVID(vid);
 			else
 				return false;
-		} catch catch (InvalidIDException | IdAuthenticationBusinessException | NumberFormatException e) {
+		} catch (InvalidIDException | IdAuthenticationBusinessException | NumberFormatException e) {
 			return false;
 		}
 	}
