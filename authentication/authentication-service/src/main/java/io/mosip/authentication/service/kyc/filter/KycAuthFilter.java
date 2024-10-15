@@ -73,12 +73,12 @@ public class KycAuthFilter extends IdAuthFilter {
 
 	@Override
 	protected boolean isSignatureVerificationRequired() {
-		return true;
+		return false;
 	}
 
 	@Override
 	protected boolean isTrustValidationRequired() {
-		return true;
+		return false;
 	}
 	
 	@Override
