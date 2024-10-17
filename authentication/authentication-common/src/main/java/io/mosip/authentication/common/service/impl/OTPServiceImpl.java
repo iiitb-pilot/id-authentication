@@ -119,7 +119,7 @@ public class OTPServiceImpl implements OTPService {
 	@Qualifier("NotificationLangComparator")
 	private LanguageComparator languageComparator;
 
-	private ObjectMapper objectMapper;
+	private ObjectMapper objectMapper = new ObjectMapper();
 	
 	/** The mosip logger. */
 	private static Logger mosipLogger = IdaLogger.getLogger(OTPServiceImpl.class);
