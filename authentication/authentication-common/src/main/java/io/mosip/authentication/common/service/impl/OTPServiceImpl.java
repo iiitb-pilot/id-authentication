@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.authentication.authfilter.exception.IdAuthenticationFilterException;
 import io.mosip.authentication.common.service.entity.AuthtypeLock;
 import io.mosip.authentication.common.service.repository.AuthLockRepository;
@@ -116,6 +118,8 @@ public class OTPServiceImpl implements OTPService {
 	@Autowired
 	@Qualifier("NotificationLangComparator")
 	private LanguageComparator languageComparator;
+
+	private ObjectMapper objectMapper;
 	
 	/** The mosip logger. */
 	private static Logger mosipLogger = IdaLogger.getLogger(OTPServiceImpl.class);
@@ -218,8 +222,16 @@ public class OTPServiceImpl implements OTPService {
 			
 			Map<String, List<IdentityInfoDTO>> idInfo = IdInfoFetcher.getIdInfo(idResDTO);			
 			Map<String, String> valueMap = new HashMap<>();
-			
-			List<String> templateLanguages = getTemplateLanguages(idInfo);			
+
+			try {
+				mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(), this.getClass().getName(),
+						" idInfo Values : " + objectMapper.writeValueAsString(idInfo));
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
+			List<String> templateLanguages = getTemplateLanguages(idInfo);
+			mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(), this.getClass().getName(),
+					" templateLanguages : " + templateLanguages);
 			for (String lang : templateLanguages) {
 				valueMap.put(NAME + "_" + lang, getName(lang, idInfo));
 			}
