@@ -16,6 +16,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.mosip.authentication.common.service.impl.OTPServiceImpl;
+import io.mosip.authentication.core.logger.IdaLogger;
+import io.mosip.kernel.core.logger.spi.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -82,16 +87,28 @@ public class NotificationServiceImpl implements NotificationService {
 	@Autowired
 	@Qualifier("NotificationLangComparator")
 	private LanguageComparator languageComparator;
+
+	private ObjectMapper objectMapper = new ObjectMapper();
+
+	/** The mosip logger. */
+	private static Logger mosipLogger = IdaLogger.getLogger(NotificationServiceImpl.class);
 	
 	public void sendAuthNotification(AuthRequestDTO authRequestDTO, String idvid, AuthResponseDTO authResponseDTO,
 			Map<String, List<IdentityInfoDTO>> idInfo, boolean isAuth) throws IdAuthenticationBusinessException {
 
 		Map<String, Object> values = new HashMap<>();
 		List<String> templateLanguages = getTemplateLanguages(idInfo);
-		
+		try {
+			mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(), this.getClass().getName(),
+					" idInfo Values : " + objectMapper.writeValueAsString(idInfo));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
 		for (String lang : templateLanguages) {
 			values.put(NAME + "_" + lang, infoHelper.getEntityInfoAsString(DemoMatchType.NAME, lang, idInfo));
 		}
+		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(), this.getClass().getName(),
+				" templateLanguages : " + templateLanguages);
 		Tuple2<String, String> dateAndTime = getDateAndTime(DateUtils.parseToLocalDateTime(authResponseDTO.getResponseTime()));
 		values.put(DATE, dateAndTime.getT1());
 		values.put(TIME, dateAndTime.getT2());
