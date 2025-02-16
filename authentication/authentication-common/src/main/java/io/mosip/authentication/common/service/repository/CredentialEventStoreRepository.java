@@ -6,12 +6,15 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import io.mosip.authentication.common.service.entity.CredentialEventStore;
 import io.mosip.kernel.core.dataaccess.spi.repository.BaseRepository;
+
+import javax.transaction.Transactional;
 
 /**
  * The Interface CredentialEventStoreRepository.
@@ -30,7 +33,17 @@ public interface CredentialEventStoreRepository extends BaseRepository<Credentia
 	@Query(value = "SELECT * from credential_event_store where status_code in ('NEW', 'FAILED')" // then, try processing old entries
 			, nativeQuery = true)
 	Page<CredentialEventStore> findNewOrFailedEvents(Pageable pageable);
-	
+
+	/**
+	 * Find new or failed events.
+	 *
+	 * @param pageable the pageable
+	 * @return the page
+	 */
+	@Query(value = "SELECT * from credential_event_store where batch_id = :batchId" // then, try processing old entries
+			, nativeQuery = true)
+	Page<CredentialEventStore> findEventsByBatchId(@Param("batchId")String batchId);
+
 	/**
 	 * Find max cr D times by status code.
 	 *
@@ -56,4 +69,10 @@ public interface CredentialEventStoreRepository extends BaseRepository<Credentia
 	 */
 	@Query(value = "SELECT DISTINCT(credentialTransactionId) FROM CredentialEventStore WHERE credentialTransactionId IN (:requestIds)")
 	List<String> findDistictCredentialTransactionIdsInList(@Param("requestIds") List<String> requestIds);
+
+	@Modifying
+	@Transactional
+	@Query(value = "update credential_event_store ce set batch_id =:batchId where ce.event_id in (select ce1.event_id from credential_event_store ce1 "
+	+ " where ce1.status_code in ('NEW', 'FAILED') and ce1.batch_id is null ORDER BY ce1.status_code desc, ce1.retry_count asc, ce1.cr_dtimes asc LIMIT :pageSize)", nativeQuery = true)
+	int updateBatchId(@Param("batchId") String batchId, @Param("pageSize") Integer pageSize);
 }
