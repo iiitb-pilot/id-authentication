@@ -73,6 +73,6 @@ public interface CredentialEventStoreRepository extends BaseRepository<Credentia
 	@Modifying
 	@Transactional
 	@Query(value = "update credential_event_store ce set batch_id =:batchId where ce.event_id in (select ce1.event_id from credential_event_store ce1 "
-	+ " where ce1.status_code in ('NEW', 'FAILED') and ce1.batch_id is null ORDER BY ce1.status_code desc, ce1.retry_count asc, ce1.cr_dtimes asc LIMIT :pageSize)", nativeQuery = true)
+	+ " where (ce1.status_code = 'NEW' and ce1.batch_id is null) or ce1.status_code = 'FAILED' ORDER BY ce1.status_code desc, ce1.retry_count asc, ce1.cr_dtimes asc LIMIT :pageSize)", nativeQuery = true)
 	int updateBatchId(@Param("batchId") String batchId, @Param("pageSize") Integer pageSize);
 }
