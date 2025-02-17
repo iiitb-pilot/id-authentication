@@ -33,9 +33,8 @@ public interface CredentialEventStoreRepository extends BaseRepository<Credentia
 	 * @param pageable the pageable
 	 * @return the page
 	 */
-	@Lock(LockModeType.PESSIMISTIC_WRITE)
-	@QueryHints(@QueryHint(name = AvailableSettings.JPA_LOCK_TIMEOUT, value = "-2"))
-	@Query(value = "SELECT cvs from CredentialEventStore cvs where cvs.statusCode in ('NEW', 'FAILED')")
+	@Query(value = "SELECT * from credential_event_store where status_code in ('NEW', 'FAILED') order by status_code desc, retry_count asc, cr_dtimes asc FOR UPDATE SKIP LOCKED" // then, try processing old entries
+			, nativeQuery = true)
 	Page<CredentialEventStore> findNewOrFailedEvents(Pageable pageable);
 
 	/**
