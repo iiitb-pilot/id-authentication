@@ -4,14 +4,20 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import io.mosip.authentication.common.service.entity.CredentialEventStore;
 import io.mosip.kernel.core.dataaccess.spi.repository.BaseRepository;
+
+import javax.persistence.LockModeType;
+import javax.persistence.QueryHint;
 
 /**
  * The Interface CredentialEventStoreRepository.
@@ -27,7 +33,9 @@ public interface CredentialEventStoreRepository extends BaseRepository<Credentia
 	 * @param pageable the pageable
 	 * @return the page
 	 */
-	@Query(value = "SELECT * from credential_event_store where status_code in ('NEW', 'FAILED') FOR UPDATE SKIP LOCKED" // then, try processing old entries
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@QueryHints(@QueryHint(name = AvailableSettings.JPA_LOCK_TIMEOUT, value = "-2"))
+	@Query(value = "SELECT * from credential_event_store where status_code in ('NEW', 'FAILED')" // then, try processing old entries
 			, nativeQuery = true)
 	Page<CredentialEventStore> findNewOrFailedEvents(Pageable pageable);
 
