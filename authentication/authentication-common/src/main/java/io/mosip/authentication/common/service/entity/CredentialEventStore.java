@@ -87,7 +87,4 @@ public class CredentialEventStore {
 	@Column(name = "del_dtimes")
 	private LocalDateTime delDTimes;
 
-	/** The del D times. */
-	@Column(name = "batch_id")
-	private String batchId;
 }

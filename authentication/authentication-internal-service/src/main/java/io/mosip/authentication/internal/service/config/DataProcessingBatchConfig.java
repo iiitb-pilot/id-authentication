@@ -1,7 +1,9 @@
 package io.mosip.authentication.internal.service.config;
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.CREDENTIAL_STORE_CHUNK_SIZE;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -28,7 +30,6 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.data.RepositoryItemReader;
-import org.springframework.batch.item.data.RepositoryItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -195,10 +196,9 @@ public class DataProcessingBatchConfig {
 	public Step credentialStoreStep() {
 		Map<Class<? extends Throwable>, Boolean>  exceptions = new HashMap<>();
 		exceptions.put(IdAuthenticationBusinessException.class, false);
-		String batchId = UUID.randomUUID().toString();
 		return stepBuilderFactory.get("credentialStoreStep")
 				.<CredentialEventStore, Future<IdentityEntity>>chunk(chunkSize)
-				.reader(credentialEventReader(batchId, chunkSize))
+				.reader(credentialEventReader())
 				.processor(asyncCredentialStoreItemProcessor())
 				.writer(asyncCredentialStoreItemWriter())
 				// Here Job level retry is not applied, because, event level retry is handled
@@ -318,20 +318,15 @@ public class DataProcessingBatchConfig {
 	 * @return the item reader
 	 */
 	@Bean
-	public ItemReader<CredentialEventStore> credentialEventReader(String batchId, Integer pageSize) {
-		credentialEventRepo.updateBatchId(batchId, pageSize);
-		List<String> arguments = new ArrayList<>();
-		arguments.add(batchId);
-
+	public ItemReader<CredentialEventStore> credentialEventReader() {
 		RepositoryItemReader<CredentialEventStore> reader = new RepositoryItemReader<>();
 		reader.setRepository(credentialEventRepo);
-		reader.setMethodName("findEventsByBatchId");
-		reader.setArguments(arguments);
-//		final Map<String, Sort.Direction> sorts = new HashMap<>();
-//		    sorts.put("status_code", Direction.DESC); // NEW will be first processed than FAILED
-//		    sorts.put("retry_count", Direction.ASC); // then try processing Least failed entries first
-//		    sorts.put("cr_dtimes", Direction.ASC); // then, try processing old entries
-//		reader.setSort(sorts);
+		reader.setMethodName("findNewOrFailedEvents");
+		final Map<String, Sort.Direction> sorts = new HashMap<>();
+		    sorts.put("status_code", Direction.DESC); // NEW will be first processed than FAILED
+		    sorts.put("retry_count", Direction.ASC); // then try processing Least failed entries first
+		    sorts.put("cr_dtimes", Direction.ASC); // then, try processing old entries
+		reader.setSort(sorts);
 		reader.setPageSize(chunkSize);
 		return reader;
 	}
