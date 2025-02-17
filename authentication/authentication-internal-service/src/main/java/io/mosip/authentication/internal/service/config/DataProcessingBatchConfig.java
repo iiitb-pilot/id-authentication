@@ -322,11 +322,11 @@ public class DataProcessingBatchConfig {
 		RepositoryItemReader<CredentialEventStore> reader = new RepositoryItemReader<>();
 		reader.setRepository(credentialEventRepo);
 		reader.setMethodName("findNewOrFailedEvents");
-//		final Map<String, Sort.Direction> sorts = new HashMap<>();
+		final Map<String, Sort.Direction> sorts = new HashMap<>();
 //		    sorts.put("statusCode", Direction.DESC); // NEW will be first processed than FAILED
 //		    sorts.put("retryCount", Direction.ASC); // then try processing Least failed entries first
 //		    sorts.put("crDTimes", Direction.ASC); // then, try processing old entries
-//		reader.setSort(sorts);
+		reader.setSort(sorts);
 		reader.setPageSize(chunkSize);
 		return reader;
 	}
