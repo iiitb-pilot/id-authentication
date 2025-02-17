@@ -42,7 +42,7 @@ public interface CredentialEventStoreRepository extends BaseRepository<Credentia
 	 */
 	@Query(value = "SELECT * from credential_event_store where batch_id = :batchId limit  :pageSize" // then, try processing old entries
 			, nativeQuery = true)
-	Page<CredentialEventStore> findEventsByBatchId(@Param("batchId")String batchId, @Param("pageSize") Integer pageSize);
+	Page<CredentialEventStore> findEventsByBatchId(@Param("batchId")String batchId, Pageable pageable);
 
 	/**
 	 * Find max cr D times by status code.
