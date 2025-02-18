@@ -266,12 +266,6 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 		
 		credentialEventStore.setUpdBy(IDA);
 		credentialEventStore.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
-
-		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
-				"updateStatusAndRetryCount", "Entering to Update Status");
-		credentialEventRepo.update(credentialEventStore);
-		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
-				"updateStatusAndRetryCount", "Exist to Update Status ");
 	}
 
 	/**

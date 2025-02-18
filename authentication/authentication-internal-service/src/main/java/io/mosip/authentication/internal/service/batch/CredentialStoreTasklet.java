@@ -5,6 +5,7 @@ import io.mosip.authentication.common.service.entity.IdentityEntity;
 import io.mosip.authentication.common.service.repository.CredentialEventStoreRepository;
 import io.mosip.authentication.common.service.spi.idevent.CredentialStoreService;
 import io.mosip.authentication.common.service.transaction.manager.IdAuthSecurityManager;
+import io.mosip.authentication.core.constant.IdAuthCommonConstants;
 import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
 import io.mosip.authentication.core.exception.RetryingBeforeRetryIntervalException;
 import io.mosip.authentication.core.logger.IdaLogger;
@@ -19,6 +20,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
@@ -63,11 +65,10 @@ public class CredentialStoreTasklet implements Tasklet {
         String batchId = UUID.randomUUID().toString();
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                 "Inside CredentialStoreTasklet.execute() method");
+        long startTime = System.currentTimeMillis();
+        List<CredentialEventStore> credentialEventStoreList = credentialEventRepo.findNewOrFailedEvents(pageSize);
 
         try {
-            long startTime = System.currentTimeMillis();
-            List<CredentialEventStore> credentialEventStoreList = credentialEventRepo.findNewOrFailedEvents(pageSize);
-
             forkJoinPool.submit(() -> credentialEventStoreList.parallelStream().forEach(credential -> {
                 try {
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
@@ -100,6 +101,14 @@ public class CredentialStoreTasklet implements Tasklet {
                     "ExecutionException : " + ExceptionUtils.getStackTrace(e));
         }
 
+        if (!CollectionUtils.isEmpty(credentialEventStoreList)) {
+            LOGGER.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
+                    "updateStatusAndRetryCount", "Entering to Update Status");
+            credentialEventRepo.saveAll(credentialEventStoreList);
+            long endTime = System.currentTimeMillis();
+            LOGGER.debug(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                    "Total time taken to complete till update of " + credentialEventStoreList.size() + " records (" + (endTime - startTime) + "ms)");
+        }
         return RepeatStatus.FINISHED;
     }
 }
