@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -67,15 +68,13 @@ public class CredentialStoreTasklet implements Tasklet {
                 "Inside CredentialStoreTasklet.execute() method");
         long startTime = System.currentTimeMillis();
         List<CredentialEventStore> credentialEventStoreList = credentialEventRepo.findNewOrFailedEvents(pageSize);
-
+        List<IdentityEntity> identityEntities = new ArrayList<>();
         try {
             forkJoinPool.submit(() -> credentialEventStoreList.parallelStream().forEach(credential -> {
                 try {
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "started processing item : " + credential.getCredentialTransactionId());
-                    IdentityEntity identityEntity = credentialStoreService.processCredentialStoreEvent(credential);
-
-                    credentialStoreService.storeIdentityEntity(identityEntity);
+                    identityEntities.add(credentialStoreService.processCredentialStoreEvent(credential));
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "ended processing item : " + credential.getCredentialTransactionId());
                 } catch (IdAuthenticationBusinessException e) {
@@ -102,9 +101,8 @@ public class CredentialStoreTasklet implements Tasklet {
         }
 
         if (!CollectionUtils.isEmpty(credentialEventStoreList)) {
-            LOGGER.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
-                    "updateStatusAndRetryCount", "Entering to Update Status");
             credentialEventRepo.saveAll(credentialEventStoreList);
+            credentialStoreService.storeIdentityEntity(identityEntities);
             long endTime = System.currentTimeMillis();
             LOGGER.debug(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                     "Total time taken to complete till update of " + credentialEventStoreList.size() + " records (" + (endTime - startTime) + "ms)");
