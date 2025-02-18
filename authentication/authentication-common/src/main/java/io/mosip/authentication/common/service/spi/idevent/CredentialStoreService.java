@@ -23,6 +23,13 @@ public interface CredentialStoreService {
 	public void storeIdentityEntity(List<? extends IdentityEntity> idEntities);
 
 	/**
+	 * Store identity entity.
+	 *
+	 * @param idEntities the id entities
+	 */
+	public void storeIdentityEntity(IdentityEntity idEntity);
+
+	/**
 	 * Store event model.
 	 *
 	 * @param eventModel the event model

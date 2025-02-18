@@ -37,6 +37,10 @@ public interface CredentialEventStoreRepository extends BaseRepository<Credentia
 			, nativeQuery = true)
 	Page<CredentialEventStore> findNewOrFailedEvents(Pageable pageable);
 
+	@Query(value = "SELECT * from credential_event_store where status_code in ('NEW', 'FAILED') order by status_code desc, retry_count asc, cr_dtimes asc FOR UPDATE SKIP LOCKED LIMIT :pageSize" // then, try processing old entries
+			, nativeQuery = true)
+	List<CredentialEventStore> findNewOrFailedEvents(@Param("pageSize")Integer pageSize);
+
 	/**
 	 * Find max cr D times by status code.
 	 *

@@ -1,0 +1,101 @@
+package io.mosip.authentication.internal.service.batch;
+
+import io.mosip.authentication.common.service.entity.CredentialEventStore;
+import io.mosip.authentication.common.service.entity.IdentityEntity;
+import io.mosip.authentication.common.service.repository.CredentialEventStoreRepository;
+import io.mosip.authentication.common.service.spi.idevent.CredentialStoreService;
+import io.mosip.authentication.common.service.transaction.manager.IdAuthSecurityManager;
+import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
+import io.mosip.authentication.core.exception.RetryingBeforeRetryIntervalException;
+import io.mosip.authentication.core.logger.IdaLogger;
+import io.mosip.authentication.internal.service.config.DataProcessingBatchConfig;
+import io.mosip.idrepository.core.security.IdRepoSecurityManager;
+import io.mosip.kernel.core.exception.ExceptionUtils;
+import io.mosip.kernel.core.logger.spi.Logger;
+import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+
+@Component
+public class CredentialStoreTasklet implements Tasklet {
+
+    @Value("${ida.internal.batch.thread.count:10}")
+    private int threadCount;
+
+    /** The logger. */
+    private static Logger LOGGER = IdaLogger.getLogger(DataProcessingBatchConfig.class);
+
+    ForkJoinPool forkJoinPool;
+
+    private static final String IDA_CREDENTIAL_ITEM_TASKLET = "CredentialStoreTasklet";
+
+
+    @Autowired
+    private IdAuthSecurityManager securityManager;
+
+    @Autowired
+    private CredentialEventStoreRepository credentialEventRepo;
+
+    @Value("${ida.internal.batch.page.size:100}")
+    private int pageSize;
+
+    /** The credential store service. */
+    @Autowired
+    private CredentialStoreService credentialStoreService;
+
+    @PostConstruct
+    public void init() {
+        forkJoinPool = new ForkJoinPool(threadCount);
+    }
+
+    @Override
+    public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
+        String batchId = UUID.randomUUID().toString();
+        LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                "Inside CredentialStoreTasklet.execute() method");
+
+        try {
+            long startTime = System.currentTimeMillis();
+            List<CredentialEventStore> credentialEventStoreList = credentialEventRepo.findNewOrFailedEvents(pageSize);
+
+            forkJoinPool.submit(() -> credentialEventStoreList.parallelStream().forEach(credential -> {
+                try {
+                    LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                            "started processing item : " + credential.getCredentialTransactionId());
+                    IdentityEntity identityEntity = credentialStoreService.processCredentialStoreEvent(credential);
+
+                    credentialStoreService.storeIdentityEntity(identityEntity);
+                    LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                            "ended processing item : " + credential.getCredentialTransactionId());
+                } catch (IdAuthenticationBusinessException e) {
+                    LOGGER.error(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                            ExceptionUtils.getStackTrace(e));
+                } catch (RetryingBeforeRetryIntervalException e) {
+                    e.printStackTrace();
+                }
+            })).get();
+            long endTime = System.currentTimeMillis();
+            LOGGER.debug(IdRepoSecurityManager.getUser(), "Perform" + IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                    "Total time taken to complete process of " + credentialEventStoreList.size() + " records (" + (endTime - startTime) + "ms)");
+        } catch (InterruptedException e) {
+            LOGGER.error(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                    ExceptionUtils.getStackTrace(e));
+            throw e;
+        } catch (ExecutionException e) {
+            LOGGER.error(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                    ExceptionUtils.getStackTrace(e));
+        }
+
+        return RepeatStatus.FINISHED;
+    }
+}
