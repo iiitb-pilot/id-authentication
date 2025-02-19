@@ -6,6 +6,10 @@ import java.io.IOException;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import io.mosip.authentication.common.service.impl.idevent.CredentialStoreServiceImpl;
+import io.mosip.authentication.core.logger.IdaLogger;
+import io.mosip.idrepository.core.security.IdRepoSecurityManager;
+import io.mosip.kernel.core.logger.spi.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +50,9 @@ public class DataShareManager {
 	@Value("${" + IDA_DATASHARE_THUMBPRINT_VALIDATION_REQUIRED + ":true}")
 	private boolean thumbprintValidationRequired;
 
+	private static Logger mosipLogger = IdaLogger.getLogger(DataShareManager.class);
+
+
 	@SuppressWarnings("unchecked")
 	public <R> R downloadObject(String dataShareUrl, Class<R> clazz, boolean decryptionRequired) throws  RestServiceException, IdAuthenticationBusinessException {
 		RestRequestDTO request = restRequestFactory.buildRequest(RestServicesConstants.DATA_SHARE_GET, null, String.class);
@@ -80,6 +87,51 @@ public class DataShareManager {
 			throw new IdAuthUncheckedException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS.getErrorCode(), IdAuthenticationErrorConstants.UNABLE_TO_PROCESS.getErrorMessage() + " : " + errorOpt.get().toString());
 		}
 	}
+
+	public <R> R downloadObject1(String dataShareUrl, Class<R> clazz, boolean decryptionRequired, Long startTime, String transactionId) throws  RestServiceException, IdAuthenticationBusinessException {
+		RestRequestDTO request = restRequestFactory.buildRequest(RestServicesConstants.DATA_SHARE_GET, null, String.class);
+		request.setUri(dataShareUrl);
+		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
+				"THAM - downloadObject1 start from Datashare ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms For Url : " + dataShareUrl);
+		String responseStr = restHelper.requestSync(request);
+		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
+				"THAM - downloadObject1 API Executed ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+
+		Optional<Entry<String, Object>> errorOpt = RestUtil.getError(responseStr, mapper);
+
+		if (errorOpt.isEmpty()) {
+			R result;
+			if (decryptionRequired) {
+				// Decrypt data
+				byte[] dataBytes = securityManager.decrypt(responseStr, dataShareGetDecryptRefId, null, null,
+						thumbprintValidationRequired);
+				mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
+						"THAM - downloadObject1 Decryption Completed ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+
+				if (clazz.equals(String.class)) {
+					result = (R) new String(dataBytes);
+				} else {
+					result = readToObject(clazz, dataBytes);
+				}
+			} else {
+				if (clazz.equals(String.class)) {
+					result = (R) responseStr;
+				} else {
+					byte[] dataBytes = responseStr.getBytes();
+					result = readToObject(clazz, dataBytes);
+				}
+			}
+			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
+					"THAM - downloadObject1 returning Result ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+
+			return result;
+
+		} else {
+			//Unchecked exception is thrown so that retry will not be performed on this.
+			throw new IdAuthUncheckedException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS.getErrorCode(), IdAuthenticationErrorConstants.UNABLE_TO_PROCESS.getErrorMessage() + " : " + errorOpt.get().toString());
+		}
+	}
+
 
 	private <R> R readToObject(Class<R> clazz, byte[] dataBytes) throws IdAuthenticationBusinessException {
 		try {
