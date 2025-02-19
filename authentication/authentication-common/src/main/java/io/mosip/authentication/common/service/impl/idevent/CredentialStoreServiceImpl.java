@@ -194,6 +194,11 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 		}
 	}
 
+	@Override
+	public IdentityEntity processCredentialStoreEvent(CredentialEventStore credentialEventStore) throws IdAuthenticationBusinessException, RetryingBeforeRetryIntervalException {
+		return null;
+	}
+
 	/**
 	 * Skip if waiting for retry interval.
 	 *

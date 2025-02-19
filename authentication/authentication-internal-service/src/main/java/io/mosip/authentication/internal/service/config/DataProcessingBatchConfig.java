@@ -277,8 +277,7 @@ public class DataProcessingBatchConfig {
 	 * @return the item processor
 	 */
 	private ItemProcessor<CredentialEventStore, IdentityEntity> credentialStoreItemProcessor() {
-		//return credentialStoreService::processCredentialStoreEvent;
-		return null;
+		return credentialStoreService::processCredentialStoreEvent;
 	}
 	
 	@Bean
