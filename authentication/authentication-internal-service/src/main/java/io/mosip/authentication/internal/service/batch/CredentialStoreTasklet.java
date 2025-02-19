@@ -68,36 +68,38 @@ public class CredentialStoreTasklet implements Tasklet {
                 "Inside CredentialStoreTasklet.execute() method");
         long startTime = System.currentTimeMillis();
         List<CredentialEventStore> credentialEventStoreList = credentialEventRepo.findNewOrFailedEvents(pageSize);
+        LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                "THAM - Successfully Fetch Record from Table. Total Records : " + credentialEventStoreList.size() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
         List<IdentityEntity> identityEntities = new ArrayList<>();
         try {
             forkJoinPool.submit(() -> credentialEventStoreList.parallelStream().forEach(credential -> {
                 try {
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                            "started processing item : " + credential.getCredentialTransactionId());
-                    identityEntities.add(credentialStoreService.processCredentialStoreEvent(credential));
+                            "THAM - started processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+                    identityEntities.add(credentialStoreService.processCredentialStoreEvent(credential, startTime));
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                            "ended processing item : " + credential.getCredentialTransactionId());
+                            "THAM - ended processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
                 } catch (IdAuthenticationBusinessException e) {
                     LOGGER.error(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                            "IdAuthenticationBusinessException : " + ExceptionUtils.getStackTrace(e));
+                            "THAM - IdAuthenticationBusinessException : " + ExceptionUtils.getStackTrace(e));
                 } catch (RetryingBeforeRetryIntervalException e) {
                     LOGGER.error(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                            "RetryingBeforeRetryIntervalException : " + ExceptionUtils.getStackTrace(e));
+                            "THAM - RetryingBeforeRetryIntervalException : " + ExceptionUtils.getStackTrace(e));
                 } catch (Exception e) {
                     LOGGER.error(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                            "Exception : " + ExceptionUtils.getStackTrace(e));
+                            "THAM - xception : " + ExceptionUtils.getStackTrace(e));
                 }
             })).get();
             long endTime = System.currentTimeMillis();
             LOGGER.debug(IdRepoSecurityManager.getUser(), "Perform" + IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                    "Total time taken to complete process of " + credentialEventStoreList.size() + " records (" + (endTime - startTime) + "ms)");
+                    "THAM - Total time taken to complete process of " + credentialEventStoreList.size() + " records (" + (endTime - startTime) + "ms)");
         } catch (InterruptedException e) {
             LOGGER.error(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                    "InterruptedException : " + ExceptionUtils.getStackTrace(e));
+                    "THAM - InterruptedException : " + ExceptionUtils.getStackTrace(e));
             throw e;
         } catch (ExecutionException e) {
             LOGGER.error(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                    "ExecutionException : " + ExceptionUtils.getStackTrace(e));
+                    "THAM - ExecutionException : " + ExceptionUtils.getStackTrace(e));
         }
 
         if (!CollectionUtils.isEmpty(credentialEventStoreList)) {
@@ -105,7 +107,7 @@ public class CredentialStoreTasklet implements Tasklet {
             credentialStoreService.storeIdentityEntity(identityEntities);
             long endTime = System.currentTimeMillis();
             LOGGER.debug(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                    "Total time taken to complete till update of " + credentialEventStoreList.size() + " records (" + (endTime - startTime) + "ms)");
+                    "THAM - Total time taken to complete till update of " + credentialEventStoreList.size() + " records (" + (endTime - startTime) + "ms)");
         }
         return RepeatStatus.FINISHED;
     }
