@@ -276,9 +276,9 @@ public class DataProcessingBatchConfig {
 	 *
 	 * @return the item processor
 	 */
-	private ItemProcessor<CredentialEventStore, IdentityEntity> credentialStoreItemProcessor() {
-		return credentialStoreService::processCredentialStoreEvent;
-	}
+//	private ItemProcessor<CredentialEventStore, IdentityEntity> credentialStoreItemProcessor() {
+//		return credentialStoreService::processCredentialStoreEvent;
+//	}
 	
 	@Bean
 	public <T> AsyncItemProcessor<T, T> asyncIdentityItemProcessor() {
@@ -296,7 +296,7 @@ public class DataProcessingBatchConfig {
 	@Bean
 	public AsyncItemProcessor<CredentialEventStore, IdentityEntity> asyncCredentialStoreItemProcessor() {
 		AsyncItemProcessor<CredentialEventStore, IdentityEntity> asyncItemProcessor = new AsyncItemProcessor<>();
-		    asyncItemProcessor.setDelegate(credentialStoreItemProcessor());
+//		    asyncItemProcessor.setDelegate(credentialStoreItemProcessor());
 		    asyncItemProcessor.setTaskExecutor(taskExecutor());
 		return asyncItemProcessor;
 	}
