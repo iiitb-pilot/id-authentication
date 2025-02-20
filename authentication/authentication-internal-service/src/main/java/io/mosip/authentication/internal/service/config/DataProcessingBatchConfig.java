@@ -142,11 +142,11 @@ public class DataProcessingBatchConfig {
 				.flow(credentialStoreStep())
 				.end()
 				.build();
-		try {
+/*		try {
 			jobRegistry.register(new ReferenceJobFactory(job));
 		} catch (DuplicateJobException e) {
 			logger.warn("error in registering job: {}", e.getMessage());
-		}
+		}*/
 		return job;
 	}
 	
