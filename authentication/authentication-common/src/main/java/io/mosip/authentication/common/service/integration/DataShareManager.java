@@ -92,10 +92,10 @@ public class DataShareManager {
 		RestRequestDTO request = restRequestFactory.buildRequest(RestServicesConstants.DATA_SHARE_GET, null, String.class);
 		request.setUri(dataShareUrl);
 		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-				"THAM - downloadObject1 start from Datashare ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms For Url : " + dataShareUrl);
+				"THAM - downloadObject1 Object start from Datashare ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms For Url : " + dataShareUrl);
 		String responseStr = restHelper.requestSync(request);
 		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-				"THAM - downloadObject1 API Executed ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+				"THAM - downloadObject1 Object End from Datashare ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 
 		Optional<Entry<String, Object>> errorOpt = RestUtil.getError(responseStr, mapper);
 
