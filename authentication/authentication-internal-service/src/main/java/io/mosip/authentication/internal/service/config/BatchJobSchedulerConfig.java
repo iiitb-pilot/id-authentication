@@ -54,6 +54,7 @@ public class BatchJobSchedulerConfig {
 	@Scheduled(fixedDelayString = "${" + CREDENTIAL_STORE_JOB_DELAY + ":" + CREDENTIAL_STORE_DEFAULT_DELAY_MILLISECS_STRING + "}")
 	public void scheduleCredentialStoreJob() {
 		try {
+			logger.info("Triggering credentialStoreJob batch ");
 			JobParameters jobParameters = new JobParametersBuilder().addLong("time", System.currentTimeMillis())
 					.toJobParameters();
 			jobLauncher.run(credentialStoreJob, jobParameters);

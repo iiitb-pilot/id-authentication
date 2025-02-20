@@ -67,11 +67,17 @@ public class CredentialStoreTasklet implements Tasklet {
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                 "Inside CredentialStoreTasklet.execute() method");
         long startTime = System.currentTimeMillis();
+        LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                "THAM - CredentialStoreTasklet Batch Starting Time : " + (System.currentTimeMillis() - startTime) + " ms");
+
         List<CredentialEventStore> credentialEventStoreList = credentialEventRepo.findNewOrFailedEvents(pageSize);
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                 "THAM - Successfully Fetch Record from Table. Total Records : " + credentialEventStoreList.size() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
         List<IdentityEntity> identityEntities = new ArrayList<>();
         try {
+            LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                    "THAM - CredentialStoreTasklet Entering into Thread : " + (System.currentTimeMillis() - startTime) + " ms");
+
             forkJoinPool.submit(() -> credentialEventStoreList.parallelStream().forEach(credential -> {
                 try {
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
@@ -90,6 +96,9 @@ public class CredentialStoreTasklet implements Tasklet {
                             "THAM - xception : " + ExceptionUtils.getStackTrace(e));
                 }
             })).get();
+            LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                    "THAM - CredentialStoreTasklet Exit out Thread : " + (System.currentTimeMillis() - startTime) + " ms");
+
             long endTime = System.currentTimeMillis();
             LOGGER.debug(IdRepoSecurityManager.getUser(), "Perform" + IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                     "THAM - Total time taken to complete process of " + credentialEventStoreList.size() + " records (" + (endTime - startTime) + "ms)");
@@ -109,6 +118,9 @@ public class CredentialStoreTasklet implements Tasklet {
             LOGGER.debug(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                     "THAM - Total time taken to complete till update of " + credentialEventStoreList.size() + " records (" + (endTime - startTime) + "ms)");
         }
+        LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                "THAM - CredentialStoreTasklet Existing Batch : " + (System.currentTimeMillis() - startTime) + " ms");
+
         return RepeatStatus.FINISHED;
     }
 }
