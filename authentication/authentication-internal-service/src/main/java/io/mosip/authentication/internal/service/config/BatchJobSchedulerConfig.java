@@ -51,7 +51,7 @@ public class BatchJobSchedulerConfig {
 	/**
 	 * Schedule credential store job.
 	 */
-	@Scheduled(fixedDelay = 3000)
+	@Scheduled(fixedDelayString = "${" + CREDENTIAL_STORE_JOB_DELAY + ":" + CREDENTIAL_STORE_DEFAULT_DELAY_MILLISECS_STRING + "}")
 	public void scheduleCredentialStoreJob() {
 		try {
 			logger.info("THAM - CredentialStoreTasklet Triggering batch ");
