@@ -43,7 +43,7 @@ public class CredentialStoreJobExecutionListener implements JobExecutionListener
 	 */
 	@Override
 	public void afterJob(JobExecution jobExecution) {
-		logger.info("THAM - CredentialStoreTasklet", "afterJob", "AfterJob", "Entering Method");
+		logger.info("THAM - CredentialStoreTasklet", "afterJob", "AfterJob", "Start Time : " + jobExecution.getStartTime() + " Exist Time : " + jobExecution.getEndTime());
 		if (!jobExecution.getStepExecutions().isEmpty()
 				&& jobExecution.getStepExecutions().iterator().next().getReadCount() > 0) {
 			List<Throwable> allFailureExceptions = jobExecution.getAllFailureExceptions();
