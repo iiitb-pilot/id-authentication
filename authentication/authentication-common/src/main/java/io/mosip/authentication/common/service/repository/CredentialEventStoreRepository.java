@@ -1,25 +1,18 @@
 package io.mosip.authentication.common.service.repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import org.hibernate.cfg.AvailableSettings;
+import io.mosip.authentication.common.service.entity.CredentialEventStore;
+import io.mosip.kernel.core.dataaccess.spi.repository.BaseRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import io.mosip.authentication.common.service.entity.CredentialEventStore;
-import io.mosip.kernel.core.dataaccess.spi.repository.BaseRepository;
-
-import javax.persistence.LockModeType;
-import javax.persistence.QueryHint;
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * The Interface CredentialEventStoreRepository.
@@ -39,8 +32,7 @@ public interface CredentialEventStoreRepository extends BaseRepository<Credentia
 			, nativeQuery = true)
 	Page<CredentialEventStore> findNewOrFailedEvents(Pageable pageable);
 
-
-	@Query(value = "SELECT * from credential_event_store where batch_id = :batchId" // then, try processing old entries
+	@Query(value = "SELECT * from credential_event_store where batch_id = :batchId " // then, try processing old entries
 			, nativeQuery = true)
 	List<CredentialEventStore> findNewOrFailedEvents(@Param("batchId")String batchId);
 
