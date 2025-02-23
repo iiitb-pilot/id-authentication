@@ -67,11 +67,12 @@ public class CredentialStoreTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
         String batchId = UUID.randomUUID().toString();
+        long startTime1 = System.currentTimeMillis();
+
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                 "Inside CredentialStoreTasklet.execute() method");
-        long startTime = System.currentTimeMillis();
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                "THAM - CredentialStoreTasklet Batch Starting Time : " + (System.currentTimeMillis() - startTime) + " ms");
+                "THAM - CredentialStoreTasklet Batch Starting");
 
         List<CredentialEventStore> credentialEventStoreList = credentialEventRepo.findNewOrFailedEvents(pageSize);
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
@@ -79,10 +80,12 @@ public class CredentialStoreTasklet implements Tasklet {
   //      List<IdentityEntity> identityEntities = new ArrayList<>();
         try {
             LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                    "THAM - CredentialStoreTasklet Entering into Thread : " + (System.currentTimeMillis() - startTime) + " ms");
+                    "THAM - CredentialStoreTasklet Entering into Thread");
 
             forkJoinPool.submit(() -> credentialEventStoreList.parallelStream().forEach(credential -> {
                 try {
+                    long startTime = System.currentTimeMillis();
+
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - started processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
    //                 identityEntities.add(credentialStoreService.processCredentialStoreEvent(credential, startTime));
@@ -102,11 +105,11 @@ public class CredentialStoreTasklet implements Tasklet {
                 }
             })).get();
             LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                    "THAM - CredentialStoreTasklet Exit out Thread : " + (System.currentTimeMillis() - startTime) + " ms");
+                    "THAM - CredentialStoreTasklet Exit out Thread");
 
             long endTime = System.currentTimeMillis();
             LOGGER.debug(IdRepoSecurityManager.getUser(), "Perform" + IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                    "THAM - Total time taken to complete process of " + credentialEventStoreList.size() + " records (" + (endTime - startTime) + "ms)");
+                    "THAM - Total time taken to complete process of " + credentialEventStoreList.size() + " records (" + (endTime - startTime1) + "ms)");
         } catch (InterruptedException e) {
             LOGGER.error(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                     "THAM - InterruptedException : " + ExceptionUtils.getStackTrace(e));
@@ -121,10 +124,10 @@ public class CredentialStoreTasklet implements Tasklet {
       //      credentialStoreService.storeIdentityEntity(identityEntities);
             long endTime = System.currentTimeMillis();
             LOGGER.debug(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                    "THAM - Total time taken to complete till update of " + credentialEventStoreList.size() + " records (" + (endTime - startTime) + "ms)");
+                    "THAM - Total time taken to complete till update of " + credentialEventStoreList.size() + " records (" + (endTime - startTime1) + "ms)");
         }
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                "THAM - CredentialStoreTasklet Existing Batch : " + (System.currentTimeMillis() - startTime) + " ms");
+                "THAM - CredentialStoreTasklet Existing Batch : " + (System.currentTimeMillis() - startTime1) + " ms");
 
         return RepeatStatus.FINISHED;
     }
