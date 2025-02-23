@@ -8,6 +8,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
@@ -40,9 +41,9 @@ public interface CredentialEventStoreRepository extends BaseRepository<Credentia
 
 
 	@Transactional
-	@Query(value = "SELECT * from credential_event_store where status_code in ('NEW', 'FAILED') order by status_code desc, retry_count asc, cr_dtimes asc FOR UPDATE SKIP LOCKED LIMIT :pageSize" // then, try processing old entries
+	@Query(value = "SELECT * from credential_event_store where batch_id = :batchId" // then, try processing old entries
 			, nativeQuery = true)
-	List<CredentialEventStore> findNewOrFailedEvents(@Param("pageSize")Integer pageSize);
+	List<CredentialEventStore> findNewOrFailedEvents(@Param("batchId")String batchId);
 
 	/**
 	 * Find max cr D times by status code.
@@ -69,4 +70,10 @@ public interface CredentialEventStoreRepository extends BaseRepository<Credentia
 	 */
 	@Query(value = "SELECT DISTINCT(credentialTransactionId) FROM CredentialEventStore WHERE credentialTransactionId IN (:requestIds)")
 	List<String> findDistictCredentialTransactionIdsInList(@Param("requestIds") List<String> requestIds);
+
+	@Modifying
+	@Transactional
+	@Query(value = "update credential_event_store ce set batch_id =:batchId where ce.event_id in (select ce1.event_id from credential_event_store ce1 "
+	+ " where (ce1.status_code = 'NEW' and ce1.batch_id is null) or ce1.status_code = 'FAILED' ORDER BY ce1.status_code desc, ce1.retry_count asc, ce1.cr_dtimes asc LIMIT :pageSize)", nativeQuery = true)
+	int updateBatchId(@Param("batchId") String batchId, @Param("pageSize") Integer pageSize);
 }

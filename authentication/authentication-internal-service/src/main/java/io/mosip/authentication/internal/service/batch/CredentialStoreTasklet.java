@@ -3,6 +3,7 @@ package io.mosip.authentication.internal.service.batch;
 import io.mosip.authentication.common.service.entity.CredentialEventStore;
 import io.mosip.authentication.common.service.entity.IdentityEntity;
 import io.mosip.authentication.common.service.repository.CredentialEventStoreRepository;
+import io.mosip.authentication.common.service.repository.IdentityCacheRepository;
 import io.mosip.authentication.common.service.spi.idevent.CredentialStoreService;
 import io.mosip.authentication.common.service.transaction.manager.IdAuthSecurityManager;
 import io.mosip.authentication.core.constant.IdAuthCommonConstants;
@@ -42,12 +43,14 @@ public class CredentialStoreTasklet implements Tasklet {
 
     private static final String IDA_CREDENTIAL_ITEM_TASKLET = "CredentialStoreTasklet";
 
-
     @Autowired
     private IdAuthSecurityManager securityManager;
 
     @Autowired
     private CredentialEventStoreRepository credentialEventRepo;
+
+    @Autowired
+    private IdentityCacheRepository identityCacheRepo;
 
     @Value("${ida.internal.batch.page.size:100}")
     private int pageSize;
@@ -70,10 +73,11 @@ public class CredentialStoreTasklet implements Tasklet {
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                 "THAM - CredentialStoreTasklet Batch Starting Time : " + (System.currentTimeMillis() - startTime) + " ms");
 
-        List<CredentialEventStore> credentialEventStoreList = credentialEventRepo.findNewOrFailedEvents(pageSize);
+        credentialEventRepo.updateBatchId(batchId, pageSize);
+        List<CredentialEventStore> credentialEventStoreList = credentialEventRepo.findNewOrFailedEvents(batchId);
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                 "THAM - Successfully Fetch Record from Table. Total Records : " + credentialEventStoreList.size() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-        List<IdentityEntity> identityEntities = new ArrayList<>();
+  //      List<IdentityEntity> identityEntities = new ArrayList<>();
         try {
             LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                     "THAM - CredentialStoreTasklet Entering into Thread : " + (System.currentTimeMillis() - startTime) + " ms");
@@ -82,7 +86,9 @@ public class CredentialStoreTasklet implements Tasklet {
                 try {
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - started processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-                    identityEntities.add(credentialStoreService.processCredentialStoreEvent(credential, startTime));
+   //                 identityEntities.add(credentialStoreService.processCredentialStoreEvent(credential, startTime));
+                    identityCacheRepo.save(credentialStoreService.processCredentialStoreEvent(credential, startTime));
+
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - ended processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
                 } catch (IdAuthenticationBusinessException e) {
@@ -111,13 +117,13 @@ public class CredentialStoreTasklet implements Tasklet {
                     "THAM - ExecutionException : " + ExceptionUtils.getStackTrace(e));
         }
 
-        if (!CollectionUtils.isEmpty(credentialEventStoreList)) {
+/*        if (!CollectionUtils.isEmpty(credentialEventStoreList)) {
             credentialEventRepo.saveAll(credentialEventStoreList);
             credentialStoreService.storeIdentityEntity(identityEntities);
             long endTime = System.currentTimeMillis();
             LOGGER.debug(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                     "THAM - Total time taken to complete till update of " + credentialEventStoreList.size() + " records (" + (endTime - startTime) + "ms)");
-        }
+        }*/
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                 "THAM - CredentialStoreTasklet Existing Batch : " + (System.currentTimeMillis() - startTime) + " ms");
 
