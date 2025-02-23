@@ -295,8 +295,6 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 		
 		credentialEventStore.setUpdBy(IDA);
 		credentialEventStore.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
-
-		credentialEventRepo.update(credentialEventStore);
 	}
 
 	/**

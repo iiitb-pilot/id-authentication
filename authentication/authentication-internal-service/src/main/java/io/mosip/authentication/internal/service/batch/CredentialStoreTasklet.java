@@ -73,8 +73,7 @@ public class CredentialStoreTasklet implements Tasklet {
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                 "THAM - CredentialStoreTasklet Batch Starting Time : " + (System.currentTimeMillis() - startTime) + " ms");
 
-        credentialEventRepo.updateBatchId(batchId, pageSize);
-        List<CredentialEventStore> credentialEventStoreList = credentialEventRepo.findNewOrFailedEvents(batchId);
+        List<CredentialEventStore> credentialEventStoreList = credentialEventRepo.findNewOrFailedEvents(pageSize);
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                 "THAM - Successfully Fetch Record from Table. Total Records : " + credentialEventStoreList.size() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
   //      List<IdentityEntity> identityEntities = new ArrayList<>();
@@ -117,13 +116,13 @@ public class CredentialStoreTasklet implements Tasklet {
                     "THAM - ExecutionException : " + ExceptionUtils.getStackTrace(e));
         }
 
-/*        if (!CollectionUtils.isEmpty(credentialEventStoreList)) {
+        if (!CollectionUtils.isEmpty(credentialEventStoreList)) {
             credentialEventRepo.saveAll(credentialEventStoreList);
-            credentialStoreService.storeIdentityEntity(identityEntities);
+      //      credentialStoreService.storeIdentityEntity(identityEntities);
             long endTime = System.currentTimeMillis();
             LOGGER.debug(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                     "THAM - Total time taken to complete till update of " + credentialEventStoreList.size() + " records (" + (endTime - startTime) + "ms)");
-        }*/
+        }
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                 "THAM - CredentialStoreTasklet Existing Batch : " + (System.currentTimeMillis() - startTime) + " ms");
 
