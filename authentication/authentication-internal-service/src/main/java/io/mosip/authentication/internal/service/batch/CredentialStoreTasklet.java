@@ -76,7 +76,7 @@ public class CredentialStoreTasklet implements Tasklet {
 
         List<CredentialEventStore> credentialEventStoreList = credentialEventRepo.findNewOrFailedEvents(pageSize);
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                "THAM - Successfully Fetch Record from Table. Total Records : " + credentialEventStoreList.size() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+                "THAM - Successfully Fetch Record from Table. Total Records : " + credentialEventStoreList.size() + " Time : " + (System.currentTimeMillis() - startTime1) + " ms");
   //      List<IdentityEntity> identityEntities = new ArrayList<>();
         try {
             LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
@@ -89,7 +89,11 @@ public class CredentialStoreTasklet implements Tasklet {
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - started processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
    //                 identityEntities.add(credentialStoreService.processCredentialStoreEvent(credential, startTime));
-                    identityCacheRepo.save(credentialStoreService.processCredentialStoreEvent(credential, startTime));
+                    IdentityEntity identityEntity = credentialStoreService.processCredentialStoreEvent(credential, startTime);
+                    LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                            "THAM - created Identity Entity Object processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+
+                    identityCacheRepo.save(identityEntity);
 
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - ended processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
