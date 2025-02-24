@@ -371,18 +371,20 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 					String bioKeyIndex = (String) additionalData.get(BIO_KEY_INDEX);
 					String bioKey = (String) additionalData.get(BIO_KEY);
 
-					saveSalt(modulo, salt);
+					mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
+							"THAM - Before saveSalt  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+					saveSalt(modulo, salt, startTime, credentialEventStore.getCredentialTransactionId());
 					mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
 							"THAM - saveSalt  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 
 					if (demoKeyIndex != null && demoKey != null) {
-						securityManager.reEncryptAndStoreRandomKey(demoKeyIndex, demoKey);
+						securityManager.reEncryptAndStoreRandomKey(demoKeyIndex, demoKey,  startTime, credentialEventStore.getCredentialTransactionId());
 						mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
 								"THAM - demoKeyIndex reEncryptAndStoreRandomKey ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 					}
 
 					if (bioKeyIndex != null && bioKey != null) {
-						securityManager.reEncryptAndStoreRandomKey(bioKeyIndex, bioKey);
+						securityManager.reEncryptAndStoreRandomKey(bioKeyIndex, bioKey,  startTime, credentialEventStore.getCredentialTransactionId());
 						mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
 								"THAM - bioKeyIndex reEncryptAndStoreRandomKey ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 					}
@@ -395,7 +397,7 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 					mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
 							"THAM - downloadObject from Datashare ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 
-					return createIdentityEntity(idHash, token, transactionLimit, expiryTime, credentialData);
+					return createIdentityEntity(idHash, token, transactionLimit, expiryTime, credentialData,  startTime, credentialEventStore.getCredentialTransactionId());
 
 				} catch (RestServiceException | IDDataValidationException e) {
 					throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS, e);
@@ -429,7 +431,7 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	 */
 	@SuppressWarnings("unchecked")
 	private IdentityEntity createIdentityEntity(String idHash, String token, Integer transactionLimit,
-			String expiryTime, Map<String, Object> credentialData) throws IdAuthenticationBusinessException {
+			String expiryTime, Map<String, Object> credentialData, Long startTime, String transactionId) throws IdAuthenticationBusinessException {
 		Map<String, Object>[] demoBioData = splitDemoBioData(
 				(Map<String, Object>) credentialData.get(IdAuthCommonConstants.CREDENTIAL_SUBJECT));
 		try {
@@ -438,6 +440,9 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 
 			IdentityEntity identityEntity = new IdentityEntity();
 			Optional<IdentityEntity> identityEntityOpt = identityCacheRepo.findById(idHash);
+			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
+					"THAM - Fetching Record in IdentityCache Table : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+
 			if (identityEntityOpt.isPresent()) {
 				identityEntity = identityEntityOpt.get();
 				identityEntity.setUpdBy(IDA);
@@ -502,9 +507,11 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	 * @param modulo the modulo
 	 * @param salt   the salt
 	 */
-	private void saveSalt(String modulo, String salt) {
+	private void saveSalt(String modulo, String salt, Long startTime, String transactionId) {
 		Integer saltModulo = Integer.valueOf(modulo);
 		if (!uinHashSaltRepo.existsById(saltModulo)) {
+			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
+					"THAM - Record Found in UinHashSale  ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 			IdaUinHashSalt saltEntity = new IdaUinHashSalt();
 			saltEntity.setId(saltModulo);
 			saltEntity.setSalt(salt);
