@@ -95,7 +95,7 @@ public class DataShareManager {
 	//			"THAM - downloadObject1 Object start from Datashare ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms For Url : " + dataShareUrl);
 		String responseStr = restHelper.requestSync(request);
 		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-				"THAM - downloadObject1 Object End from Datashare ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+				"THAMARAIKANNAN - downloadObject1 Object End from Datashare ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 
 		Optional<Entry<String, Object>> errorOpt = RestUtil.getError(responseStr, mapper);
 
@@ -106,7 +106,7 @@ public class DataShareManager {
 				byte[] dataBytes = securityManager.decrypt(responseStr, dataShareGetDecryptRefId, null, null,
 						thumbprintValidationRequired);
 				mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-						"THAM - downloadObject1 Decryption Completed ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+						"THAMARAIKANNAN - downloadObject1 Decryption Completed ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 
 				if (clazz.equals(String.class)) {
 					result = (R) new String(dataBytes);
@@ -122,7 +122,7 @@ public class DataShareManager {
 				}
 			}
 			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-					"THAM - downloadObject1 returning Result ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+					"THAMARAIKANNAN - downloadObject1 returning Result ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 
 			return result;
 
