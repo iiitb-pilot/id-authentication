@@ -43,6 +43,11 @@ public class TrackerEntity {
 	private String transactionId;
 
 	@NotNull
+	@Column(name = "time_taken")
+	private Long timeTaken;
+
+
+	@NotNull
 	@Column(name = "cr_dtimes")
 	private LocalDateTime crDTimes;
 	

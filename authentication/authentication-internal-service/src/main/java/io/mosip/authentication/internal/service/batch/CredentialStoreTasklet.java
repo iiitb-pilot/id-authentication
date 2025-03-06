@@ -94,14 +94,6 @@ public class CredentialStoreTasklet implements Tasklet {
                 try {
                     long startTime = System.currentTimeMillis();
 
-                    TrackerEntity entity = new TrackerEntity();
-                    entity.setId(UUID.randomUUID().toString());
-                    entity.setBatchId(batchId);
-                    entity.setTransactionId(credential.getCredentialTransactionId());
-                    entity.setCrDTimes(DateUtils.getUTCCurrentDateTime());
-                    entity.setStDTimes(DateUtils.parseDateToLocalDateTime((new Date(startTime1))));
-                    trackerRepository.save(entity);
-
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - started processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
    //                 identityEntities.add(credentialStoreService.processCredentialStoreEvent(credential, startTime));
@@ -113,6 +105,14 @@ public class CredentialStoreTasklet implements Tasklet {
 
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - ended processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+                    TrackerEntity entity = new TrackerEntity();
+                    entity.setId(UUID.randomUUID().toString());
+                    entity.setBatchId(batchId);
+                    entity.setTransactionId(credential.getCredentialTransactionId());
+                    entity.setCrDTimes(DateUtils.getUTCCurrentDateTime());
+                    entity.setStDTimes(DateUtils.parseDateToLocalDateTime((new Date(startTime1))));
+                    entity.setTimeTaken(startTime);
+                    trackerRepository.save(entity);
                 } catch (IdAuthenticationBusinessException e) {
                     LOGGER.error(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - IdAuthenticationBusinessException : " + ExceptionUtils.getStackTrace(e));
