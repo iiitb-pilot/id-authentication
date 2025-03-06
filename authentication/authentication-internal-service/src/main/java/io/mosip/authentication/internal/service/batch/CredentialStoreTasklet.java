@@ -2,8 +2,10 @@ package io.mosip.authentication.internal.service.batch;
 
 import io.mosip.authentication.common.service.entity.CredentialEventStore;
 import io.mosip.authentication.common.service.entity.IdentityEntity;
+import io.mosip.authentication.common.service.entity.TrackerEntity;
 import io.mosip.authentication.common.service.repository.CredentialEventStoreRepository;
 import io.mosip.authentication.common.service.repository.IdentityCacheRepository;
+import io.mosip.authentication.common.service.repository.TrackerRepository;
 import io.mosip.authentication.common.service.spi.idevent.CredentialStoreService;
 import io.mosip.authentication.common.service.transaction.manager.IdAuthSecurityManager;
 import io.mosip.authentication.core.constant.IdAuthCommonConstants;
@@ -14,6 +16,7 @@ import io.mosip.authentication.internal.service.config.DataProcessingBatchConfig
 import io.mosip.idrepository.core.security.IdRepoSecurityManager;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.kernel.core.util.DateUtils;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -52,6 +55,9 @@ public class CredentialStoreTasklet implements Tasklet {
     @Autowired
     private IdentityCacheRepository identityCacheRepo;
 
+    @Autowired
+    private TrackerRepository trackerRepository;
+
     @Value("${ida.internal.batch.page.size:100}")
     private int pageSize;
 
@@ -85,6 +91,13 @@ public class CredentialStoreTasklet implements Tasklet {
             forkJoinPool.submit(() -> credentialEventStoreList.parallelStream().forEach(credential -> {
                 try {
                     long startTime = System.currentTimeMillis();
+
+                    TrackerEntity entity = new TrackerEntity();
+                    entity.setId(UUID.randomUUID().toString());
+                    entity.setBatchId(batchId);
+                    entity.setTransactionId(credential.getCredentialTransactionId());
+                    entity.setCrDTimes(DateUtils.getUTCCurrentDateTime());
+                    trackerRepository.save(entity);
 
     //                LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
     //                        "THAM - started processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
