@@ -35,6 +35,10 @@ public class TrackerEntity {
 	private String batchId;
 
 	@NotNull
+	@Column(name = "st_dtimes")
+	private LocalDateTime stDTimes;
+
+	@NotNull
 	@Column(name = "transaction_id")
 	private String transactionId;
 

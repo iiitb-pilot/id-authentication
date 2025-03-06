@@ -27,7 +27,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -97,6 +99,7 @@ public class CredentialStoreTasklet implements Tasklet {
                     entity.setBatchId(batchId);
                     entity.setTransactionId(credential.getCredentialTransactionId());
                     entity.setCrDTimes(DateUtils.getUTCCurrentDateTime());
+                    entity.setStDTimes(DateUtils.parseDateToLocalDateTime((new Date(startTime1))));
                     trackerRepository.save(entity);
 
     //                LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
