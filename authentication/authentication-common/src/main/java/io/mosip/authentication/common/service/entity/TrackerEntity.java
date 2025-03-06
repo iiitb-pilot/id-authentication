@@ -44,7 +44,7 @@ public class TrackerEntity {
 
 	@NotNull
 	@Column(name = "time_taken")
-	private Long timeTaken;
+	private Integer timeTaken;
 
 
 	@NotNull
