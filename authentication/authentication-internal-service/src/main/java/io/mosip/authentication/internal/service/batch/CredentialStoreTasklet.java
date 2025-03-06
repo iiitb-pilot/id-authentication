@@ -111,7 +111,7 @@ public class CredentialStoreTasklet implements Tasklet {
                     entity.setTransactionId(credential.getCredentialTransactionId());
                     entity.setCrDTimes(DateUtils.getUTCCurrentDateTime());
                     entity.setStDTimes(DateUtils.parseDateToLocalDateTime((new Date(startTime1))));
-                    entity.setTimeTaken(startTime);
+                    entity.setTimeTaken((int) (System.currentTimeMillis() - startTime));
                     trackerRepository.save(entity);
                 } catch (IdAuthenticationBusinessException e) {
                     LOGGER.error(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
