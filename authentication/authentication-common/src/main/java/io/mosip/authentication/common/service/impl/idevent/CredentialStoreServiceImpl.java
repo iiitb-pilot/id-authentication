@@ -351,8 +351,8 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 		
 		String eventObjectStr = credentialEventStore.getEventObject();
 		try {
-	//		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-	//				"THAM - Entering doProcessCredentialStoreEvent  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
+					"THAM - Entering doProcessCredentialStoreEvent  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 
 	//		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(), "processCredentialStoreEvent",
 	//				"THAM - Processing credential store event: " + objectMapper.writeValueAsString(credentialEventStore) + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
@@ -374,13 +374,13 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 			//		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
 			//				"THAM - Before saveSalt  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 					saveSalt(modulo, salt, startTime, credentialEventStore.getCredentialTransactionId());
-			//		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-			//				"THAM - saveSalt  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+					mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
+							"THAM - saveSalt  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 
 					if (demoKeyIndex != null && demoKey != null) {
 						securityManager.reEncryptAndStoreRandomKey(demoKeyIndex, demoKey,  startTime, credentialEventStore.getCredentialTransactionId());
-			//			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-			//					"THAM - demoKeyIndex reEncryptAndStoreRandomKey ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+						mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
+								"THAM - demoKeyIndex reEncryptAndStoreRandomKey ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 					}
 
 					if (bioKeyIndex != null && bioKey != null) {
@@ -394,8 +394,8 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 					String expiryTime = (String) additionalData.get(EXPIRY_TIME);
 					String token = (String) additionalData.get(TOKEN);
 					Map<String, Object> credentialData = dataShareManager.downloadObject1(dataShareUri, Map.class, true, startTime, credentialEventStore.getCredentialTransactionId());
-					mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-							"THAM - downloadObject from Datashare ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+			//		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
+			//				"THAM - downloadObject from Datashare ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 
 					return createIdentityEntity(idHash, token, transactionLimit, expiryTime, credentialData,  startTime, credentialEventStore.getCredentialTransactionId());
 
