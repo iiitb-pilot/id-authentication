@@ -90,7 +90,7 @@ public class CredentialStoreTasklet implements Tasklet {
     //        LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
     //                "THAM - CredentialStoreTasklet Entering into Thread");
 
-            forkJoinPool.submit(() -> credentialEventStoreList.parallelStream().forEach(credential -> {
+            forkJoinPool.submit(() -> credentialEventStoreList.stream().forEach(credential -> {
                 try {
                     long startTime = System.currentTimeMillis();
 
