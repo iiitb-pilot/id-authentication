@@ -299,6 +299,9 @@ public class IdAuthSecurityManager {
 	 */
 	public void reEncryptAndStoreRandomKey(String index, String key, Long startTime, String transactionId) {
 		Integer indexInt = Integer.valueOf(index);
+		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
+				"THAM - reEncryptAndStoreRandomKey Search for ID : " + indexInt + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+
 		if (repo.findKeyById(indexInt) == null) {
 			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
 					"THAM - Before reEncryptAndStoreRandomKey  ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
