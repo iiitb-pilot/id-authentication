@@ -509,7 +509,7 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	 */
 	private void saveSalt(String modulo, String salt, Long startTime, String transactionId) {
 		Integer saltModulo = Integer.valueOf(modulo);
-		if (!uinHashSaltRepo.existsById(saltModulo)) {
+		if (uinHashSaltRepo.findKeyById(saltModulo) == null) {
 			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
 					"THAM - Record Found in UinHashSale  ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 			IdaUinHashSalt saltEntity = new IdaUinHashSalt();
