@@ -34,12 +34,12 @@ import io.mosip.idrepository.core.util.RestUtil;
 @Component
 public class DataShareManager {
 	
-	@Autowired
-	@Qualifier("withSelfTokenWebclient")
-	private RestHelper restHelper;
-
 //	@Autowired
-//	private RestApiClient restHelper;
+//	@Qualifier("withSelfTokenWebclient")
+//	private RestHelper restHelper;
+
+	@Autowired
+	private RestApiClient restHelper;
 	
 	@Autowired
 	private RestRequestFactory restRequestFactory;
@@ -61,11 +61,11 @@ public class DataShareManager {
 
 	@SuppressWarnings("unchecked")
 	public <R> R downloadObject(String dataShareUrl, Class<R> clazz, boolean decryptionRequired) throws  RestServiceException, IdAuthenticationBusinessException {
-		RestRequestDTO request = restRequestFactory.buildRequest(RestServicesConstants.DATA_SHARE_GET, null, String.class);
-		request.setUri(dataShareUrl);
-		String responseStr = restHelper.requestSync(request);
-//		String responseStr = restHelper.getApi(dataShareUrl, String.class);
-		mosipLogger.info("THAM - Response String : " + responseStr);
+//		RestRequestDTO request = restRequestFactory.buildRequest(RestServicesConstants.DATA_SHARE_GET, null, String.class);
+//		request.setUri(dataShareUrl);
+//		String responseStr = restHelper.requestSync(request);
+		String responseStr = restHelper.getApi(dataShareUrl, String.class);
+//		mosipLogger.info("THAM - Response String : " + responseStr);
 		Optional<Entry<String, Object>> errorOpt = RestUtil.getError(responseStr, mapper);
 		
 		if (errorOpt.isEmpty()) {
@@ -97,13 +97,13 @@ public class DataShareManager {
 	}
 
 	public <R> R downloadObject1(String dataShareUrl, Class<R> clazz, boolean decryptionRequired, Long startTime, String transactionId) throws  RestServiceException, IdAuthenticationBusinessException {
-		RestRequestDTO request = restRequestFactory.buildRequest(RestServicesConstants.DATA_SHARE_GET, null, String.class);
-		request.setUri(dataShareUrl);
+//		RestRequestDTO request = restRequestFactory.buildRequest(RestServicesConstants.DATA_SHARE_GET, null, String.class);
+//		request.setUri(dataShareUrl);
 	//	mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
 	//			"THAM - downloadObject1 Object start from Datashare ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms For Url : " + dataShareUrl);
-		String responseStr = restHelper.requestSync(request);
-	//	String responseStr = restHelper.getApi(dataShareUrl, String.class);
-		mosipLogger.info("THAM - Response String : " + responseStr);
+//		String responseStr = restHelper.requestSync(request);
+		String responseStr = restHelper.getApi(dataShareUrl, String.class);
+//		mosipLogger.info("THAM - Response String : " + responseStr);
 		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
 				"THAMARAIKANNAN - downloadObject1 Object End from Datashare ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 
