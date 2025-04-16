@@ -99,13 +99,13 @@ public class DataShareManager {
 	public <R> R downloadObject1(String dataShareUrl, Class<R> clazz, boolean decryptionRequired, Long startTime, String transactionId) throws  RestServiceException, IdAuthenticationBusinessException {
 //		RestRequestDTO request = restRequestFactory.buildRequest(RestServicesConstants.DATA_SHARE_GET, null, String.class);
 //		request.setUri(dataShareUrl);
-	//	mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-	//			"THAM - downloadObject1 Object start from Datashare ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms For Url : " + dataShareUrl);
+		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
+				"THAM - downloadObject1 Object start from Datashare ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms For Url : " + dataShareUrl);
 //		String responseStr = restHelper.requestSync(request);
 		String responseStr = restHelper.getApi(dataShareUrl, String.class);
 //		mosipLogger.info("THAM - Response String : " + responseStr);
 		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-				"THAMARAIKANNAN - downloadObject1 Object End from Datashare ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+				"THAMARAIKANNAN - downloadObject1 Object End from Datashare ID : " + transactionId + " Datashare URL : " + dataShareUrl  + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 
 		Optional<Entry<String, Object>> errorOpt = RestUtil.getError(responseStr, mapper);
 
