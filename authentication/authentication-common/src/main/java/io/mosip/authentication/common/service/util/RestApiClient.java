@@ -63,6 +63,7 @@ public class RestApiClient {
 	public <T> T getApi(String url, Class<?> responseType) {
 		T result = null;
 		try {
+			logger.info("THAM - Calling Datashare Url " + url);
 			result = (T) restTemplate.getForObject(url, responseType);
 		} catch (Exception e) {
 			logger.error("RestApiClient::getApi()::error {} {}",e.getMessage() ,e);
