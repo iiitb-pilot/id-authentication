@@ -476,11 +476,6 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 		identityCacheRepo.saveAll(idEntities);
 	}
 
-	@Override
-	public void storeIdentityEntity(IdentityEntity idEntity) {
-		identityCacheRepo.save(idEntity);
-	}
-
 	/**
 	 * Split demo bio data.
 	 *
