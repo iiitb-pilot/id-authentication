@@ -33,7 +33,7 @@ public class CredentialStoreJobExecutionListener implements JobExecutionListener
 	 */
 	@Override
 	public void beforeJob(JobExecution jobExecution) {
-	//	logger.info("THAM - CredentialStoreTasklet", "beforeJob", "beforeJob", "Entering Method");
+		logger.info("THAM - CredentialStoreTasklet", "beforeJob", "beforeJob", "Entering Method");
 	}
 
 	/**
