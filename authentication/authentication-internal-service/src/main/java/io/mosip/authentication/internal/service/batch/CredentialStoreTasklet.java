@@ -128,7 +128,7 @@ public class CredentialStoreTasklet implements Tasklet {
      //               "THAM - CredentialStoreTasklet Exit out Thread");
 
             long endTime = System.currentTimeMillis();
-            LOGGER.debug(IdRepoSecurityManager.getUser(), "Perform" + IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+            LOGGER.info(IdRepoSecurityManager.getUser(), "Perform" + IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                     "THAM - Total time taken to complete process of " + credentialEventStoreList.size() + " records (" + (endTime - startTime1) + "ms)");
         } catch (InterruptedException e) {
             LOGGER.error(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
@@ -141,9 +141,11 @@ public class CredentialStoreTasklet implements Tasklet {
 
         if (!CollectionUtils.isEmpty(credentialEventStoreList)) {
             long startTime2 = System.currentTimeMillis();
+            LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                    "THAM - CredentialStoreTasklet bEFORE Update Credential_event_store : " + (System.currentTimeMillis() - startTime1) + " ms");
             credentialEventRepo.saveAll(credentialEventStoreList);
             LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                    "THAM - CredentialStoreTasklet Update Credential_event_store : " + (System.currentTimeMillis() - startTime1) + " ms");
+                    "THAM - CredentialStoreTasklet AFTER Update Credential_event_store : " + (System.currentTimeMillis() - startTime1) + " ms");
 
             credentialStoreService.storeIdentityEntity(identityEntities);
             LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
