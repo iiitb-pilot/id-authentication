@@ -142,7 +142,14 @@ public class CredentialStoreTasklet implements Tasklet {
         if (!CollectionUtils.isEmpty(credentialEventStoreList)) {
             long startTime2 = System.currentTimeMillis();
             credentialEventRepo.saveAll(credentialEventStoreList);
+            LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                    "THAM - CredentialStoreTasklet Update Credential_event_store : " + (System.currentTimeMillis() - startTime1) + " ms");
+
             credentialStoreService.storeIdentityEntity(identityEntities);
+            LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                    "THAM - CredentialStoreTasklet Update Identity cache & flush Batch : " + (System.currentTimeMillis() - startTime1) + " ms");
+
+            credentialEventRepo.flush();
             long endTime = System.currentTimeMillis();
             TrackerEntity entity = new TrackerEntity();
             entity.setId(UUID.randomUUID().toString());

@@ -474,6 +474,7 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	@Override
 	public void storeIdentityEntity(List<? extends IdentityEntity> idEntities) {
 		identityCacheRepo.saveAll(idEntities);
+		identityCacheRepo.flush();
 	}
 
 	/**
