@@ -7,6 +7,9 @@ import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.CRE
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.CREDENTIAL_STORE_RETRY_MAX_LIMIT;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -16,6 +19,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
+import javax.sql.DataSource;
 import javax.transaction.Transactional;
 
 import io.mosip.idrepository.core.security.IdRepoSecurityManager;
@@ -150,7 +154,10 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	/** The credential request manager. */
 	@Autowired
 	private CredentialRequestManager credentialRequestManager;
-	
+
+	@Autowired
+	private DataSource dataSource;
+
 	/**
 	 * Process credential store event.
 	 *
@@ -471,10 +478,54 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	 *
 	 * @param idEntities the id entities
 	 */
+///*	@Override
+//	public void storeIdentityEntity(List<? extends IdentityEntity> idEntities) {
+//		identityCacheRepo.saveAll(idEntities);
+//		identityCacheRepo.flush();
+//	}*/
+
+	/**
+	 * Store identity entity.
+	 *
+	 * @param idEntities the id entities
+	 */
 	@Override
-	public void storeIdentityEntity(List<? extends IdentityEntity> idEntities) {
-		identityCacheRepo.saveAll(idEntities);
-		identityCacheRepo.flush();
+	public void storeIdentityEntity(List<? extends IdentityEntity> idEntities) throws SQLException {
+
+		String sql = "INSERT INTO ida.identity_cache (id, token_id, demo_data, bio_data, expiry_timestamp, " +
+				"transaction_limit, cr_by, cr_dtimes, upd_by, upd_dtimes, is_deleted, del_dtimes) " +
+				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+		try (Connection conn = dataSource.getConnection();
+			 PreparedStatement ps = conn.prepareStatement(sql)) {
+
+			conn.setAutoCommit(false);
+
+			for (int i = 0; i < idEntities.size(); i++) {
+				IdentityEntity e = idEntities.get(i);
+				ps.setString(1, e.getId());
+				ps.setString(2, e.getToken());
+				ps.setBytes(3, e.getDemographicData());
+				ps.setBytes(4, e.getBiometricData());
+				ps.setObject(5, e.getExpiryTimestamp());
+				ps.setObject(6, e.getTransactionLimit());
+				ps.setString(7, e.getCrBy());
+				ps.setObject(8, e.getCrDTimes());
+				ps.setString(9, e.getUpdBy());
+				ps.setObject(10, e.getUpdDTimes());
+				ps.setBoolean(11, e.isDeleted());
+				ps.setObject(12, e.getDelDTimes());
+
+				ps.addBatch();
+
+				if (i % 30 == 0) {
+					ps.executeBatch();
+				}
+			}
+
+			ps.executeBatch();
+			conn.commit();
+		}
 	}
 
 	/**

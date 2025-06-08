@@ -35,14 +35,12 @@ public class IdentityEntity {
 	
 	/** The demographic data. */
 	@NotNull
-	@Lob
-	@Column(name = "demo_data", columnDefinition = "BYTEA")
+	@Column(name = "demo_data")
 	private byte[] demographicData;
 	
 	/** The biometric data. */
 	@NotNull
-	@Lob
-	@Column(name = "bio_data", columnDefinition = "BYTEA")
+	@Column(name = "bio_data")
 	private byte[] biometricData;
 	
 	/** The expiry timestamp. */

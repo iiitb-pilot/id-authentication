@@ -1,5 +1,6 @@
 package io.mosip.authentication.common.service.spi.idevent;
 
+import java.sql.SQLException;
 import java.util.List;
 
 import io.mosip.authentication.common.service.entity.CredentialEventStore;
@@ -20,7 +21,7 @@ public interface CredentialStoreService {
 	 *
 	 * @param idEntities the id entities
 	 */
-	public void storeIdentityEntity(List<? extends IdentityEntity> idEntities);
+	public void storeIdentityEntity(List<? extends IdentityEntity> idEntities) throws SQLException;
 
 	/**
 	 * Store event model.
