@@ -2,10 +2,7 @@ package io.mosip.authentication.common.service.entity;
 
 import java.time.LocalDateTime;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 import lombok.Getter;
@@ -38,12 +35,14 @@ public class IdentityEntity {
 	
 	/** The demographic data. */
 	@NotNull
-	@Column(name = "demo_data")
+	@Lob
+	@Column(name = "demo_data", columnDefinition = "BYTEA")
 	private byte[] demographicData;
 	
 	/** The biometric data. */
 	@NotNull
-	@Column(name = "bio_data")
+	@Lob
+	@Column(name = "bio_data", columnDefinition = "BYTEA")
 	private byte[] biometricData;
 	
 	/** The expiry timestamp. */
