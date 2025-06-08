@@ -518,7 +518,7 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 
 				ps.addBatch();
 
-				if (i % 10 == 0) {
+				if (i % 50 == 0) {
 					ps.executeBatch();
 				}
 			}
