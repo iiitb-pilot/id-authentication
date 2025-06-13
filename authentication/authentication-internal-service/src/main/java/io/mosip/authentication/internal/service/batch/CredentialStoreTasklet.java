@@ -85,7 +85,7 @@ public class CredentialStoreTasklet implements Tasklet {
         List<CredentialEventStore> credentialEventStoreList = credentialEventRepo.findNewOrFailedEvents(pageSize);
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                 "THAM - Successfully Fetch Record from Table. Total Records : " + credentialEventStoreList.size() + " Time : " + (System.currentTimeMillis() - startTime1) + " ms");
-        List<IdentityEntity> identityEntities = new ArrayList<>();
+    //    List<IdentityEntity> identityEntities = new ArrayList<>();
         try {
     //        LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
     //                "THAM - CredentialStoreTasklet Entering into Thread");
@@ -96,15 +96,15 @@ public class CredentialStoreTasklet implements Tasklet {
 
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - started processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-                    identityEntities.add(credentialStoreService.processCredentialStoreEvent(credential, startTime));
-                //    IdentityEntity identityEntity = credentialStoreService.processCredentialStoreEvent(credential, startTime);
+                //    identityEntities.add(credentialStoreService.processCredentialStoreEvent(credential, startTime));
+                    IdentityEntity identityEntity = credentialStoreService.processCredentialStoreEvent(credential, startTime);
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - created Identity Entity Object processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 
-                //    identityCacheRepo.save(identityEntity);
+                    identityCacheRepo.save(identityEntity);
                 //    identityCacheRepo.flush();;
 
-                    LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+        /*            LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - ended processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
                     TrackerEntity entity = new TrackerEntity();
                     entity.setId(UUID.randomUUID().toString());
@@ -113,7 +113,7 @@ public class CredentialStoreTasklet implements Tasklet {
                     entity.setCrDTimes(DateUtils.getUTCCurrentDateTime());
                     entity.setStDTimes(DateUtils.parseDateToLocalDateTime((new Date(startTime1))));
                     entity.setTimeTaken((int) (System.currentTimeMillis() - startTime));
-                    trackerRepository.save(entity);
+                    trackerRepository.save(entity); */
                 } catch (IdAuthenticationBusinessException e) {
                     LOGGER.error(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - IdAuthenticationBusinessException : " + ExceptionUtils.getStackTrace(e));
@@ -145,12 +145,12 @@ public class CredentialStoreTasklet implements Tasklet {
             LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                     "THAM - CredentialStoreTasklet bEFORE Update Identity cache & flush Batch : " + (System.currentTimeMillis() - startTime1) + " ms");
 
-            credentialStoreService.storeIdentityEntity(identityEntities);
+      //      credentialStoreService.storeIdentityEntity(identityEntities);
             LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                     "THAM - CredentialStoreTasklet Update Identity cache & flush Batch : " + (System.currentTimeMillis() - startTime1) + " ms");
 
             credentialEventRepo.saveAll(credentialEventStoreList);
-            credentialEventRepo.flush();
+//            credentialEventRepo.flush();
             LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                     "THAM - CredentialStoreTasklet AFTER Update Credential_event_store : " + (System.currentTimeMillis() - startTime1) + " ms");
 
