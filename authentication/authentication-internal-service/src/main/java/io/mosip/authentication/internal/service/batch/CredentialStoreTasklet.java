@@ -102,11 +102,12 @@ public class CredentialStoreTasklet implements Tasklet {
                             "THAM - created Identity Entity Object processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 
                     identityCacheRepo.save(identityEntity);
+
                 //    identityCacheRepo.flush();;
 
-        /*            LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                    LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - ended processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-                    TrackerEntity entity = new TrackerEntity();
+            /*        TrackerEntity entity = new TrackerEntity();
                     entity.setId(UUID.randomUUID().toString());
                     entity.setBatchId(batchId);
                     entity.setTransactionId(credential.getCredentialTransactionId());
