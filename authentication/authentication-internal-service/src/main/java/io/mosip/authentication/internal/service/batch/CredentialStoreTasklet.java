@@ -79,7 +79,7 @@ public class CredentialStoreTasklet implements Tasklet {
         StepExecution stepExecution = chunkContext.getStepContext().getStepExecution();
         ExecutionContext context = stepExecution.getExecutionContext();
         long startTime1 = System.currentTimeMillis();
-        String batchId = context.getString("batchId");
+        String batchId = chunkContext.getAttribute("batchId").toString();
 
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                 "Inside CredentialStoreTasklet.execute() method");
