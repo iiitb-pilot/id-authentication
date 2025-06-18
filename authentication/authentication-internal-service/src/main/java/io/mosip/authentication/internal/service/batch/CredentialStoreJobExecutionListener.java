@@ -33,7 +33,7 @@ public class CredentialStoreJobExecutionListener implements JobExecutionListener
 	 */
 	@Override
 	public void beforeJob(JobExecution jobExecution) {
-		logger.info("THAM - CredentialStoreTasklet", "beforeJob", "beforeJob", "Entering Method");
+		logger.info("THAM - CredentialStoreTasklet - beforeJob", "beforeJob", "beforeJob", "Entering Method");
 	}
 
 	/**
@@ -43,7 +43,6 @@ public class CredentialStoreJobExecutionListener implements JobExecutionListener
 	 */
 	@Override
 	public void afterJob(JobExecution jobExecution) {
-		logger.info("THAM - CredentialStoreTasklet", "afterJob", "AfterJob", "Start Time : " + jobExecution.getStartTime() + " Exist Time : " + jobExecution.getEndTime() + " Total Time : " + (jobExecution.getEndTime().getTime() - jobExecution.getStartTime().getTime()));
 		if (!jobExecution.getStepExecutions().isEmpty()
 				&& jobExecution.getStepExecutions().iterator().next().getReadCount() > 0) {
 			List<Throwable> allFailureExceptions = jobExecution.getAllFailureExceptions();
@@ -53,7 +52,8 @@ public class CredentialStoreJobExecutionListener implements JobExecutionListener
 						exceptions);
 			}
 		}
-	//	logger.info("THAM - CredentialStoreTasklet", "afterJob", "AfterJob", "Entering Method");
+		logger.info("THAM - CredentialStoreTasklet - afterJob", "afterJob", "AfterJob", "Start Time : " + jobExecution.getStartTime() + " Exist Time : " + jobExecution.getEndTime() + " Total Time : " + (jobExecution.getEndTime().getTime() - jobExecution.getStartTime().getTime()));
+		//	logger.info("THAM - CredentialStoreTasklet", "afterJob", "AfterJob", "Entering Method");
 	}
 
 }
