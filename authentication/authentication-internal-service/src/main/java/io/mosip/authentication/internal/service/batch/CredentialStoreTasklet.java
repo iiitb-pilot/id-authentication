@@ -94,8 +94,8 @@ public class CredentialStoreTasklet implements Tasklet {
                 try {
                     long startTime = System.currentTimeMillis();
 
-                //    LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                 //           "THAM - started processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+                    LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                           "THAM - started processing item : " + credential.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
                 //    identityEntities.add(credentialStoreService.processCredentialStoreEvent(credential, startTime));
                     IdentityEntity identityEntity = credentialStoreService.processCredentialStoreEvent(credential, startTime);
                     LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
@@ -147,8 +147,8 @@ public class CredentialStoreTasklet implements Tasklet {
         //            "THAM - CredentialStoreTasklet bEFORE Update Identity cache & flush Batch : " + (System.currentTimeMillis() - startTime1) + " ms");
 
       //      credentialStoreService.storeIdentityEntity(identityEntities);
-        //    LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-        //            "THAM - CredentialStoreTasklet Update Identity cache & flush Batch : " + (System.currentTimeMillis() - startTime1) + " ms");
+            LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
+                    "THAM - CredentialStoreTasklet Update Identity cache & flush Batch : " + (System.currentTimeMillis() - startTime1) + " ms");
 
             credentialEventRepo.saveAll(credentialEventStoreList);
 //            credentialEventRepo.flush();
