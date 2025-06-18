@@ -17,6 +17,7 @@ import io.mosip.idrepository.core.security.IdRepoSecurityManager;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
+import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -76,10 +77,9 @@ public class CredentialStoreTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
-        StepExecution stepExecution = chunkContext.getStepContext().getStepExecution();
-        ExecutionContext context = stepExecution.getExecutionContext();
+        JobExecution jobExecution = (JobExecution) chunkContext.getStepContext().getJobExecutionContext();
         long startTime1 = System.currentTimeMillis();
-        String batchId = chunkContext.getAttribute("batchId").toString();
+        String batchId = jobExecution.getExecutionContext().getString("batchId");
 
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                 "Inside CredentialStoreTasklet.execute() method");
