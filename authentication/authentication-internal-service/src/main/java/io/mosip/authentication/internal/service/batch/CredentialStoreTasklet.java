@@ -77,9 +77,8 @@ public class CredentialStoreTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
-        JobExecution jobExecution = (JobExecution) chunkContext.getStepContext().getJobExecutionContext();
         long startTime1 = System.currentTimeMillis();
-        String batchId = jobExecution.getExecutionContext().getString("batchId");
+        String batchId =  (String) chunkContext.getStepContext().getJobExecutionContext().get("batchId");
 
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                 "Inside CredentialStoreTasklet.execute() method");
