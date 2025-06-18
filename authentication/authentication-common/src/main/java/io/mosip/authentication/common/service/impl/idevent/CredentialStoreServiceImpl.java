@@ -478,19 +478,19 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	 *
 	 * @param idEntities the id entities
 	 */
-///*	@Override
-//	public void storeIdentityEntity(List<? extends IdentityEntity> idEntities) {
-//		identityCacheRepo.saveAll(idEntities);
-//		identityCacheRepo.flush();
-//	}*/
+	@Override
+	public void storeIdentityEntity(List<? extends IdentityEntity> idEntities) {
+		identityCacheRepo.saveAll(idEntities);
+	//	identityCacheRepo.flush();
+	}
 
 	/**
 	 * Store identity entity.
 	 *
 	 * @param idEntities the id entities
 	 */
-	@Override
-	public void storeIdentityEntity(List<? extends IdentityEntity> idEntities) throws SQLException {
+//	@Override
+/*	public void storeIdentityEntity(List<? extends IdentityEntity> idEntities) throws SQLException {
 
 		String sql = "INSERT INTO ida.identity_cache (id, token_id, demo_data, bio_data, expiry_timestamp, " +
 				"transaction_limit, cr_by, cr_dtimes, upd_by, upd_dtimes, is_deleted, del_dtimes) " +
@@ -526,7 +526,7 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 			ps.executeBatch();
 			conn.commit();
 		}
-	}
+	}*/
 
 	/**
 	 * Split demo bio data.
