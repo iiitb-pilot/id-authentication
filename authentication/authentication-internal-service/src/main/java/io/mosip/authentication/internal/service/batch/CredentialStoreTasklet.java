@@ -91,6 +91,13 @@ public class CredentialStoreTasklet implements Tasklet {
 
                 for(CredentialEventStore credentialEventStore : credential) {
                     try {
+
+                        if(identityEntities.size() >= 5) {
+                            identityCacheRepo.saveAll(identityEntities);
+                            identityCacheRepo.flush();
+                            identityEntities.clear();
+                        }
+
                         long startTime = System.currentTimeMillis();
 
                         LOGGER.info(IdRepoSecurityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
