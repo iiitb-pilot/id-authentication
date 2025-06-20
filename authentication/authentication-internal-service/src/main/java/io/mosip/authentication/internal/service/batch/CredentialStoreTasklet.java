@@ -80,7 +80,7 @@ public class CredentialStoreTasklet implements Tasklet {
         List<List<CredentialEventStore>> credentialEventStorePartition = partition(credentialEventStoreList, threadCount);
 
         LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                "THAM - Successfully Fetch Record from Table. Total Records : " + credentialEventStorePartition.size() + " Time : " + (System.currentTimeMillis() - startTime1) + " ms");
+                "THAM - Successfully Fetch Record from Table. Total Records : " + credentialEventStoreList.size() + " Time : " + (System.currentTimeMillis() - startTime1) + " ms");
     //    List<IdentityEntity> identityEntities = new ArrayList<>();
         try {
     //        LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
@@ -94,7 +94,7 @@ public class CredentialStoreTasklet implements Tasklet {
 
                         if(identityEntities.size() >= 5) {
                             identityCacheRepo.saveAll(identityEntities);
-                            identityCacheRepo.flush();
+                           // identityCacheRepo.flush();
                             identityEntities.clear();
                         }
 
