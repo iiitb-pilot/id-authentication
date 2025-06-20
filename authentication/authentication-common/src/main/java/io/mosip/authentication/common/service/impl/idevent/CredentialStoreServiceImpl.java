@@ -26,6 +26,8 @@ import io.mosip.idrepository.core.security.IdRepoSecurityManager;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -155,8 +157,11 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	@Autowired
 	private CredentialRequestManager credentialRequestManager;
 
+//	@Autowired
+//	private DataSource dataSource;
+
 	@Autowired
-	private DataSource dataSource;
+	private JdbcTemplate jdbcTemplate;
 
 	/**
 	 * Process credential store event.
@@ -496,12 +501,9 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 				"transaction_limit, cr_by, cr_dtimes, upd_by, upd_dtimes, is_deleted, del_dtimes) " +
 				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-		try (Connection conn = dataSource.getConnection();
-			 PreparedStatement ps = conn.prepareStatement(sql)) {
-
-			conn.setAutoCommit(false);
-
-			for (int i = 0; i < idEntities.size(); i++) {
+		jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps, int i) throws SQLException {
 				IdentityEntity e = idEntities.get(i);
 				ps.setString(1, e.getId());
 				ps.setString(2, e.getToken());
@@ -516,16 +518,13 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 				ps.setBoolean(11, e.isDeleted());
 				ps.setObject(12, e.getDelDTimes());
 
-				ps.addBatch();
-
-				if (i % 100 == 0) {
-					ps.executeBatch();
-				}
 			}
 
-			ps.executeBatch();
-			conn.commit();
-		}
+			@Override
+			public int getBatchSize() {
+				return idEntities.size();
+			}
+		});
 	}
 
 	/**

@@ -21,9 +21,11 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -67,6 +69,7 @@ public class CredentialStoreTasklet implements Tasklet {
     }
 
     @Override
+    @Transactional
     public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
         long startTime1 = System.currentTimeMillis();
         String batchId =  (String) chunkContext.getStepContext().getJobExecutionContext().get("batchId");
@@ -92,10 +95,10 @@ public class CredentialStoreTasklet implements Tasklet {
                 for(CredentialEventStore credentialEventStore : credential) {
                     try {
 
-                    //    if(identityEntities.size() >= 5) {
-                    //        identityCacheRepo.saveAll(identityEntities);
-                    //        identityEntities.clear();
-                    //    }
+                        if(identityEntities.size() >= 5) {
+                            credentialStoreService.storeIdentityEntity(identityEntities);
+                            identityEntities.clear();
+                        }
 
                         long startTime = System.currentTimeMillis();
 
@@ -133,7 +136,11 @@ public class CredentialStoreTasklet implements Tasklet {
                 if (!identityEntities.isEmpty()) {
                     LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - CredentialStoreTasklet Before Insert Identity Cache : " + (System.currentTimeMillis() - startTime1) + " ms");
-                    identityCacheRepo.saveAll(identityEntities);
+                    try {
+                        credentialStoreService.storeIdentityEntity(identityEntities);
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
                     LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - CredentialStoreTasklet AFTER Insert Identity Cache : " + (System.currentTimeMillis() - startTime1) + " ms");
                 }
