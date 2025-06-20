@@ -137,7 +137,7 @@ public class CredentialStoreTasklet implements Tasklet {
                     identityCacheRepo.saveAll(identityEntities);
                     LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - CredentialStoreTasklet AFTER Insert Identity Cache : " + (System.currentTimeMillis() - startTime1) + " ms");
-                    identityCacheRepo.flush();
+                //    identityCacheRepo.flush();
                     LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - CredentialStoreTasklet AFTER Commit Identity Cache : " + (System.currentTimeMillis() - startTime1) + " ms");
 
