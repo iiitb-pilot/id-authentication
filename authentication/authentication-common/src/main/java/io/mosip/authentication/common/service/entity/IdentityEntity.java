@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.BatchSize;
 
 /**
  * The entity for the Identity records stored in identity_cache table in IDA DB.
@@ -21,6 +22,7 @@ import lombok.ToString;
 @Entity
 @NoArgsConstructor
 @Table(schema = "ida", name = "identity_cache")
+@BatchSize(size = 50)
 public class IdentityEntity {
 
 	/** The id. */

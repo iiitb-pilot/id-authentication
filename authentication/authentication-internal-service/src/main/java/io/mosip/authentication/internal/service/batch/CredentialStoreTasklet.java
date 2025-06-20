@@ -87,16 +87,15 @@ public class CredentialStoreTasklet implements Tasklet {
     //                "THAM - CredentialStoreTasklet Entering into Thread");
 
             forkJoinPool.submit(() -> credentialEventStorePartition.parallelStream().forEach(credential -> {
-                List<IdentityEntity> identityEntities = new ArrayList<>();
+                List<IdentityEntity> identityEntities = new ArrayList<>(credential.size());
 
                 for(CredentialEventStore credentialEventStore : credential) {
                     try {
 
-                        if(identityEntities.size() >= 5) {
-                            identityCacheRepo.saveAll(identityEntities);
-                           // identityCacheRepo.flush();
-                            identityEntities.clear();
-                        }
+                    //    if(identityEntities.size() >= 5) {
+                    //        identityCacheRepo.saveAll(identityEntities);
+                    //        identityEntities.clear();
+                    //    }
 
                         long startTime = System.currentTimeMillis();
 
@@ -137,10 +136,6 @@ public class CredentialStoreTasklet implements Tasklet {
                     identityCacheRepo.saveAll(identityEntities);
                     LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
                             "THAM - CredentialStoreTasklet AFTER Insert Identity Cache : " + (System.currentTimeMillis() - startTime1) + " ms");
-                //    identityCacheRepo.flush();
-                    LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
-                            "THAM - CredentialStoreTasklet AFTER Commit Identity Cache : " + (System.currentTimeMillis() - startTime1) + " ms");
-
                 }
             })).get();
      //       LOGGER.info(securityManager.getUser(), IDA_CREDENTIAL_ITEM_TASKLET, "batchid = " + batchId,
