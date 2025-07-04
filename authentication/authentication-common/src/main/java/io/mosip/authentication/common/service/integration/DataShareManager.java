@@ -88,51 +88,6 @@ public class DataShareManager {
 		}
 	}
 
-	public <R> R downloadObject1(String dataShareUrl, Class<R> clazz, boolean decryptionRequired, Long startTime, String transactionId) throws  RestServiceException, IdAuthenticationBusinessException {
-//		RestRequestDTO request = restRequestFactory.buildRequest(RestServicesConstants.DATA_SHARE_GET, null, String.class);
-//		request.setUri(dataShareUrl);
-		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-				"THAM - downloadObject1 Object start from Datashare ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms For Url : " + dataShareUrl);
-//		String responseStr = restHelper.requestSync(request);
-		String responseStr = restHelper.getApi(dataShareUrl, String.class);
-//		mosipLogger.info("THAM - Response String : " + responseStr);
-		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-				"THAMARAIKANNAN - downloadObject1 Object End from Datashare ID : " + transactionId + " Datashare URL : " + dataShareUrl  + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-
-		Optional<Entry<String, Object>> errorOpt = RestUtil.getError(responseStr, mapper);
-
-		if (errorOpt.isEmpty()) {
-			R result;
-			if (decryptionRequired) {
-				// Decrypt data
-				byte[] dataBytes = securityManager.decrypt(responseStr, dataShareGetDecryptRefId, null, null,
-						thumbprintValidationRequired);
-				mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-						"THAMARAIKANNAN - downloadObject1 Decryption Completed ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-
-				if (clazz.equals(String.class)) {
-					result = (R) new String(dataBytes);
-				} else {
-					result = readToObject(clazz, dataBytes);
-				}
-			} else {
-				if (clazz.equals(String.class)) {
-					result = (R) responseStr;
-				} else {
-					byte[] dataBytes = responseStr.getBytes();
-					result = readToObject(clazz, dataBytes);
-				}
-			}
-
-			return result;
-
-		} else {
-			//Unchecked exception is thrown so that retry will not be performed on this.
-			throw new IdAuthUncheckedException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS.getErrorCode(), IdAuthenticationErrorConstants.UNABLE_TO_PROCESS.getErrorMessage() + " : " + errorOpt.get().toString());
-		}
-	}
-
-
 	private <R> R readToObject(Class<R> clazz, byte[] dataBytes) throws IdAuthenticationBusinessException {
 		try {
 			return mapper.readValue(dataBytes, clazz);
