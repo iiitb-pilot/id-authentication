@@ -157,9 +157,6 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	@Autowired
 	private CredentialRequestManager credentialRequestManager;
 
-//	@Autowired
-//	private DataSource dataSource;
-
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
@@ -174,41 +171,29 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	 *                                              interval exception
 	 */
 	@Override
-	public IdentityEntity processCredentialStoreEvent(CredentialEventStore credentialEventStore, Long startTime)
+	public IdentityEntity processCredentialStoreEvent(CredentialEventStore credentialEventStore)
 			throws IdAuthenticationBusinessException, RetryingBeforeRetryIntervalException {
 		String statusCode = credentialEventStore.getStatusCode();
 		if (statusCode.equals(CredentialStoreStatus.FAILED.name())) {
 			skipIfWaitingForRetryInterval(credentialEventStore);
-			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-					"THAM - skipIfWaitingForRetryInterval  Id : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 		}
 		
 		try {
-			IdentityEntity entity = doProcessCredentialStoreEvent(credentialEventStore, startTime);
-	//		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-	//				"THAM - Done doProcessCredentialStoreEvent  Id : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-
-			updateEventProcessingStatus(credentialEventStore, true, false, statusCode, startTime);
-			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-					"THAM - Done updateEventProcessingStatus  Id : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+			IdentityEntity entity = doProcessCredentialStoreEvent(credentialEventStore);
+			updateEventProcessingStatus(credentialEventStore, true, false, statusCode);
 			return entity;
 		} catch (RuntimeException e) {
 			// Any Runtime exception is marked as non-recoverable and hence retry is skipped for that
 			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
-					"THAM - processCredentialStoreEvent Id : " + credentialEventStore.getCredentialTransactionId() , "Error in Processing credential store event: " + e.getMessage());
-			updateEventProcessingStatus(credentialEventStore, false, false, statusCode,startTime);
+					"processCredentialStoreEvent", "Error in Processing credential store event: " + e.getMessage());
+			updateEventProcessingStatus(credentialEventStore, false, false, statusCode);
 			throw e;
 		} catch (Exception e) {
 			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(),
-					"THAM - processCredentialStoreEvent Id : " + credentialEventStore.getCredentialTransactionId(), "Error in Processing credential store event: " + e.getMessage());
-			updateEventProcessingStatus(credentialEventStore, false, true, statusCode,startTime);
+					"processCredentialStoreEvent", "Error in Processing credential store event: " + e.getMessage());
+			updateEventProcessingStatus(credentialEventStore, false, true, statusCode);
 			throw e;
 		}
-	}
-
-	@Override
-	public IdentityEntity processCredentialStoreEvent(CredentialEventStore credentialEventStore) throws IdAuthenticationBusinessException, RetryingBeforeRetryIntervalException {
-		return null;
 	}
 
 	/**
@@ -242,7 +227,7 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	 */
 	@Transactional
 	private void updateEventProcessingStatus(CredentialEventStore credentialEventStore, boolean isSuccess, boolean isRecoverableException,
-			String status, Long startTime) {
+			String status) {
 		credentialEventStore.setUpdBy(IDA);
 		LocalDateTime updatedDTimes = DateUtils.getUTCCurrentDateTime();
 		credentialEventStore.setUpdDTimes(updatedDTimes);
@@ -253,13 +238,7 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 			credentialEventStore.setStatusCode(statusCode);
 			// Send websub event "STORED" status for the event id.
 			credentialStoreStatusEventPublisher.publishEvent(statusCode, requestId, updatedDTimes);
-			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-					"THAM - credentialStoreStatusEventPublisher publishEvent  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-
 			audit(requestId, statusCode);
-			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-					"THAM - Audit Called  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-
 		} else {
 			if (isRecoverableException) {
 				int retryCount;
@@ -280,23 +259,13 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 						audit(requestId, CredentialStoreStatus.FAILED.name());
 					}
 				}
-				mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-						"THAM - Recoverable Exception Called  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-
 			} else {
 				// Any Runtime exception is marked as non-recoverable and hence retry is skipped for that
 				updateStatusAndRetryCount(credentialEventStore, Optional.of(CredentialStoreStatus.FAILED_NON_RECOVERABLE.name()), OptionalInt.empty());
-				mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-						"THAM - Non Recoverable Exception  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+
 				// Send websub event failure message for the event id. For all failures we will send "FAILED" status only
 				credentialStoreStatusEventPublisher.publishEvent(CredentialStoreStatus.FAILED.name(), requestId, updatedDTimes);
-				mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-						"THAM - Non Recoverable publishEvent  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-
 				audit(requestId, CredentialStoreStatus.FAILED.name());
-				mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-						"THAM - Non Recoverable Writing Audit  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-
 			}
 		}
 	}
@@ -358,16 +327,13 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	 *                                           exception
 	 */
 	@Transactional
-	private IdentityEntity doProcessCredentialStoreEvent(CredentialEventStore credentialEventStore, Long startTime)
+	private IdentityEntity doProcessCredentialStoreEvent(CredentialEventStore credentialEventStore)
 			throws IdAuthenticationBusinessException {
 		
 		String eventObjectStr = credentialEventStore.getEventObject();
 		try {
-			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-					"THAM - Entering doProcessCredentialStoreEvent  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-
-	//		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(), "processCredentialStoreEvent",
-	//				"THAM - Processing credential store event: " + objectMapper.writeValueAsString(credentialEventStore) + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getName(), "processCredentialStoreEvent",
+					"Processing credential store event: " + objectMapper.writeValueAsString(credentialEventStore));
 			
 			EventModel eventModel = objectMapper.readValue(eventObjectStr.getBytes(), EventModel.class);
 			Event event = eventModel.getEvent();
@@ -383,33 +349,22 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 					String bioKeyIndex = (String) additionalData.get(BIO_KEY_INDEX);
 					String bioKey = (String) additionalData.get(BIO_KEY);
 
-			//		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-			//				"THAM - Before saveSalt  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-					saveSalt(modulo, salt, startTime, credentialEventStore.getCredentialTransactionId());
-					mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-							"THAM - saveSalt  ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+					saveSalt(modulo, salt);
 
 					if (demoKeyIndex != null && demoKey != null) {
-						securityManager.reEncryptAndStoreRandomKey(demoKeyIndex, demoKey,  startTime, credentialEventStore.getCredentialTransactionId());
-						mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-								"THAM - demoKeyIndex reEncryptAndStoreRandomKey ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+						securityManager.reEncryptAndStoreRandomKey(demoKeyIndex, demoKey);
 					}
 
 					if (bioKeyIndex != null && bioKey != null) {
-						securityManager.reEncryptAndStoreRandomKey(bioKeyIndex, bioKey,  startTime, credentialEventStore.getCredentialTransactionId());
-						mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-								"THAM - bioKeyIndex reEncryptAndStoreRandomKey ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
+						securityManager.reEncryptAndStoreRandomKey(bioKeyIndex, bioKey);
 					}
 
 					String idHash = (String) additionalData.get(ID_HASH);
 					Integer transactionLimit = (Integer) additionalData.get(TRANSACTION_LIMIT);
 					String expiryTime = (String) additionalData.get(EXPIRY_TIME);
 					String token = (String) additionalData.get(TOKEN);
-					Map<String, Object> credentialData = dataShareManager.downloadObject1(dataShareUri, Map.class, true, startTime, credentialEventStore.getCredentialTransactionId());
-			//		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-			//				"THAM - downloadObject from Datashare ID : " + credentialEventStore.getCredentialTransactionId() + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-
-					return createIdentityEntity(idHash, token, transactionLimit, expiryTime, credentialData,  startTime, credentialEventStore.getCredentialTransactionId());
+					Map<String, Object> credentialData = dataShareManager.downloadObject(dataShareUri, Map.class, true);
+					return createIdentityEntity(idHash, token, transactionLimit, expiryTime, credentialData);
 
 				} catch (RestServiceException | IDDataValidationException e) {
 					throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS, e);
@@ -443,7 +398,7 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	 */
 	@SuppressWarnings("unchecked")
 	private IdentityEntity createIdentityEntity(String idHash, String token, Integer transactionLimit,
-			String expiryTime, Map<String, Object> credentialData, Long startTime, String transactionId) throws IdAuthenticationBusinessException {
+			String expiryTime, Map<String, Object> credentialData) throws IdAuthenticationBusinessException {
 		Map<String, Object>[] demoBioData = splitDemoBioData(
 				(Map<String, Object>) credentialData.get(IdAuthCommonConstants.CREDENTIAL_SUBJECT));
 		try {
@@ -452,9 +407,6 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 
 			IdentityEntity identityEntity = new IdentityEntity();
 			Optional<IdentityEntity> identityEntityOpt = identityCacheRepo.findById(idHash);
-			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-					"THAM - Fetching Record in IdentityCache Table : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-
 			if (identityEntityOpt.isPresent()) {
 				identityEntity = identityEntityOpt.get();
 				identityEntity.setUpdBy(IDA);
@@ -483,48 +435,9 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	 *
 	 * @param idEntities the id entities
 	 */
-///*	@Override
-//	public void storeIdentityEntity(List<? extends IdentityEntity> idEntities) {
-//		identityCacheRepo.saveAll(idEntities);
-//		identityCacheRepo.flush();
-//	}*/
-
-	/**
-	 * Store identity entity.
-	 *
-	 * @param idEntities the id entities
-	 */
 	@Override
-	public void storeIdentityEntity(List<? extends IdentityEntity> idEntities) throws SQLException {
-
-		String sql = "INSERT INTO ida.identity_cache (id, token_id, demo_data, bio_data, expiry_timestamp, " +
-				"transaction_limit, cr_by, cr_dtimes, upd_by, upd_dtimes, is_deleted, del_dtimes) " +
-				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-		jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
-			@Override
-			public void setValues(PreparedStatement ps, int i) throws SQLException {
-				IdentityEntity e = idEntities.get(i);
-				ps.setString(1, e.getId());
-				ps.setString(2, e.getToken());
-				ps.setBytes(3, e.getDemographicData());
-				ps.setBytes(4, e.getBiometricData());
-				ps.setObject(5, e.getExpiryTimestamp());
-				ps.setObject(6, e.getTransactionLimit());
-				ps.setString(7, e.getCrBy());
-				ps.setObject(8, e.getCrDTimes());
-				ps.setString(9, e.getUpdBy());
-				ps.setObject(10, e.getUpdDTimes());
-				ps.setBoolean(11, e.isDeleted());
-				ps.setObject(12, e.getDelDTimes());
-
-			}
-
-			@Override
-			public int getBatchSize() {
-				return idEntities.size();
-			}
-		});
+	public void storeIdentityEntity(List<? extends IdentityEntity> idEntities) {
+		identityCacheRepo.saveAll(idEntities);
 	}
 
 	/**
@@ -553,11 +466,9 @@ public class CredentialStoreServiceImpl implements CredentialStoreService {
 	 * @param modulo the modulo
 	 * @param salt   the salt
 	 */
-	private void saveSalt(String modulo, String salt, Long startTime, String transactionId) {
+	private void saveSalt(String modulo, String salt) {
 		Integer saltModulo = Integer.valueOf(modulo);
 		if (uinHashSaltRepo.findKeyById(saltModulo) == null) {
-			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-					"THAM - Record Found in UinHashSale  ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
 			IdaUinHashSalt saltEntity = new IdaUinHashSalt();
 			saltEntity.setId(saltModulo);
 			saltEntity.setSalt(salt);

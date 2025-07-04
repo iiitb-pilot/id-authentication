@@ -40,11 +40,9 @@ public interface CredentialStoreService {
 	 * @throws RetryingBeforeRetryIntervalException the retrying before retry
 	 *                                              interval exception
 	 */
-	public IdentityEntity processCredentialStoreEvent(CredentialEventStore credentialEventStore, Long startTime)
-			throws IdAuthenticationBusinessException, RetryingBeforeRetryIntervalException;
-
 	public IdentityEntity processCredentialStoreEvent(CredentialEventStore credentialEventStore)
 			throws IdAuthenticationBusinessException, RetryingBeforeRetryIntervalException;
+
 	/**
 	 * Process missing credential request id.
 	 *

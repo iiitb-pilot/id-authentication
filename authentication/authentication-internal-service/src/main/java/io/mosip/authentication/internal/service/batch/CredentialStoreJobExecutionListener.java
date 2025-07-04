@@ -1,7 +1,6 @@
 package io.mosip.authentication.internal.service.batch;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
@@ -34,9 +33,6 @@ public class CredentialStoreJobExecutionListener implements JobExecutionListener
 	 */
 	@Override
 	public void beforeJob(JobExecution jobExecution) {
-		String batchId = UUID.randomUUID().toString();
-		logger.info("THAM - CredentialStoreTasklet - beforeJob", "beforeJob", "batchid = " + batchId, "Entering Method : " + System.currentTimeMillis());
-		jobExecution.getExecutionContext().putString("batchId", batchId);
 	}
 
 	/**
@@ -55,10 +51,6 @@ public class CredentialStoreJobExecutionListener implements JobExecutionListener
 						exceptions);
 			}
 		}
-
-
-		logger.info("THAM - CredentialStoreTasklet - afterJob", "afterJob", "batchid = " + jobExecution.getExecutionContext().getString("batchId"), "Start Time : " + jobExecution.getStartTime() + " Exist Time : " + jobExecution.getEndTime() + " Total Time : " + (jobExecution.getEndTime().getTime() - jobExecution.getStartTime().getTime()) + " Ending Time : " + + System.currentTimeMillis());
-		//	logger.info("THAM - CredentialStoreTasklet", "afterJob", "AfterJob", "Entering Method");
 	}
 
 }

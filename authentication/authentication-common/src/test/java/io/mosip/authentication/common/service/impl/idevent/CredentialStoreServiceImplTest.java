@@ -336,6 +336,11 @@ public class CredentialStoreServiceImplTest {
     /**
      * This class tests the storeIdentityEntity method
      */
+    @Test
+    public void storeIdentityEntityTest(){
+        List<IdentityEntity> idEntitites = new ArrayList<IdentityEntity>();
+        ReflectionTestUtils.invokeMethod(credentialStoreServiceImpl, "storeIdentityEntity", idEntitites);
+    }
 
     @Test(expected = UndeclaredThrowableException.class)
     public void skipIfWaitingForRetryIntervalTest(){

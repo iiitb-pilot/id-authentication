@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
 
-import io.mosip.idrepository.core.security.IdRepoSecurityManager;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -297,24 +296,6 @@ public class IdAuthSecurityManager {
 	 * @param index the index
 	 * @param key the key
 	 */
-	public void reEncryptAndStoreRandomKey(String index, String key, Long startTime, String transactionId) {
-		Integer indexInt = Integer.valueOf(index);
-		mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-				"THAM - reEncryptAndStoreRandomKey Search for ID : " + indexInt + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-
-		if (repo.findKeyById(indexInt) == null) {
-			mosipLogger.info(IdRepoSecurityManager.getUser(), this.getClass().getName(), "processCredentialStoreEvent",
-					"THAM - Before reEncryptAndStoreRandomKey  ID : " + transactionId + " Time : " + (System.currentTimeMillis() - startTime) + " ms");
-			String reEncryptedKey = reEncryptRandomKey(key);
-			DataEncryptKeystore randomKeyEntity = new DataEncryptKeystore();
-			randomKeyEntity.setId(indexInt);
-			randomKeyEntity.setKey(reEncryptedKey);
-			randomKeyEntity.setCrBy("IDA");
-			randomKeyEntity.setCrDTimes(DateUtils.getUTCCurrentDateTime());
-			repo.save(randomKeyEntity);
-		}
-	}
-
 	public void reEncryptAndStoreRandomKey(String index, String key) {
 		Integer indexInt = Integer.valueOf(index);
 		if (repo.findKeyById(indexInt) == null) {
